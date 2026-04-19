@@ -3,15 +3,16 @@ app.py
 
 Working Textual TUI for mlconjug3.
 
-Fixes:
-- Proper widget lifecycle
-- Explorer now mounts correctly
+Adds:
+- Batch conjugation tab
+- Settings tab (language + subject)
+- Proper service wiring
 """
 
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, TabbedContent, TabPane, Static
+from textual.widgets import Header, Footer, Input, TabbedContent, TabPane, Static, Button, Select
 
-from mlconjug3.mlconjug import Conjugator
+from mlconjug3.core.conjugation_service import ConjugationService
 from mlconjug3.tui.cache import ConjugationCache
 from mlconjug3.tui.widgets.results_table import ResultsTable
 from mlconjug3.tui.widgets.verb_browser import VerbBrowser, VerbSelected
@@ -28,35 +29,63 @@ class Mlconjug3TUI(App):
     def __init__(self):
         super().__init__()
 
-        self.conjugator = Conjugator(language="fr")
+        self.service = ConjugationService(language="fr")
         self.cache = ConjugationCache()
 
         self._timer = None
-        self.verbs = list(self.conjugator.conjug_manager.verbs.keys())
+        self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
 
     def compose(self) -> ComposeResult:
         yield Header()
 
         with TabbedContent():
 
-            # -------- CONJUGATE --------
+            # ---------------- CONJUGATE ----------------
             with TabPane("Conjugate"):
                 yield Static("Live conjugation")
                 yield Input(placeholder="Type a verb...", id="verb_input")
                 yield ResultsTable(id="results")
 
-            # -------- EXPLORER --------
+            # ---------------- EXPLORER ----------------
             with TabPane("Explorer"):
                 yield VerbBrowser(self.verbs)
 
+            # ---------------- BATCH ----------------
             with TabPane("Batch"):
-                yield Static("Batch mode coming soon")
+                yield Static("Enter verbs separated by spaces or commas")
+                yield Input(placeholder="aller, manger, finir", id="batch_input")
+                yield Button("Run batch", id="run_batch")
+                yield ResultsTable(id="batch_results")
 
+            # ---------------- SETTINGS ----------------
             with TabPane("Settings"):
-                yield Static("Settings coming soon")
+                yield Static("Language")
+                yield Select(
+                    options=[
+                        ("French", "fr"),
+                        ("English", "en"),
+                        ("Spanish", "es"),
+                        ("Italian", "it"),
+                        ("Portuguese", "pt"),
+                        ("Romanian", "ro"),
+                    ],
+                    value="fr",
+                    id="lang_select",
+                )
+
+                yield Static("Subject format")
+                yield Select(
+                    options=[
+                        ("Abbrev", "abbrev"),
+                        ("Pronoun", "pronoun"),
+                    ],
+                    value="abbrev",
+                    id="subject_select",
+                )
 
         yield Footer()
 
+    # ---------------- LIVE CONJUGATION ----------------
     def on_input_changed(self, event: Input.Changed):
         if event.input.id != "verb_input":
             return
@@ -75,10 +104,10 @@ class Mlconjug3TUI(App):
         if not verb:
             return
 
-        key = f"{self.conjugator.language}:{verb}:abbrev"
+        key = f"{self.service.language}:{verb}:{self.service.subject}"
 
         def compute(_):
-            return self.conjugator.conjugate(verb)
+            return self.service.conjugate(verb)
 
         result = self.cache.get(key, compute)
 
@@ -86,14 +115,33 @@ class Mlconjug3TUI(App):
         if result:
             table.update_conjugation(verb, result.conjug_info)
 
-    def on_verb_selected(self, message: VerbSelected):
-        verb = message.verb
+    # ---------------- BATCH MODE ----------------
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id != "run_batch":
+            return
 
-        result = self.conjugator.conjugate(verb)
+        input_widget = self.query_one("#batch_input", Input)
+        verbs = [
+            v.strip()
+            for v in input_widget.value.replace(",", " ").split()
+            if v.strip()
+        ]
 
-        table = self.query_one("#explorer_results", ResultsTable)
-        if result:
-            table.update_conjugation(verb, result.conjug_info)
+        results_table = self.query_one("#batch_results", ResultsTable)
+
+        for verb in verbs:
+            result = self.service.conjugate(verb)
+            if result:
+                results_table.update_conjugation(verb, result.conjug_info)
+
+    # ---------------- SETTINGS ----------------
+    def on_select_changed(self, event: Select.Changed):
+        if event.select.id == "lang_select":
+            self.service.set_language(event.value)
+            self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
+
+        elif event.select.id == "subject_select":
+            self.service.subject = event.value
 
 
 def main():
