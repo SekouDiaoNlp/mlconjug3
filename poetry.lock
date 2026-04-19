@@ -982,6 +982,26 @@ files = [
 ]
 
 [[package]]
+name = "linkify-it-py"
+version = "2.0.3"
+description = "Links recognition library with FULL unicode support."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "linkify-it-py-2.0.3.tar.gz", hash = "sha256:68cda27e162e9215c17d786649d1da0021a451bdc436ef9e0fa0ba5234b9b048"},
+    {file = "linkify_it_py-2.0.3-py3-none-any.whl", hash = "sha256:6bcbc417b0ac14323382aef5c5192c0075bf8a9d6b41820a2b66371eac6b6d79"},
+]
+
+[package.dependencies]
+uc-micro-py = "*"
+
+[package.extras]
+benchmark = ["pytest", "pytest-benchmark"]
+dev = ["black", "flake8", "isort", "pre-commit", "pyproject-flake8"]
+doc = ["myst-parser", "sphinx", "sphinx-book-theme"]
+test = ["coverage", "pytest", "pytest-cov"]
+
+[[package]]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -993,6 +1013,7 @@ files = [
 ]
 
 [package.dependencies]
+linkify-it-py = {version = ">=1,<3", optional = true, markers = "extra == \"linkify\""}
 mdurl = ">=0.1,<1.0"
 
 [package.extras]
@@ -1102,6 +1123,25 @@ files = [
     {file = "markupsafe-3.0.3-cp39-cp39-win_arm64.whl", hash = "sha256:38664109c14ffc9e7437e86b4dceb442b0096dfe3541d7864d9cbe1da4cf36c8"},
     {file = "markupsafe-3.0.3.tar.gz", hash = "sha256:722695808f4b6457b320fdc131280796bdceb04ab50fe1795cd540799ebe1698"},
 ]
+
+[[package]]
+name = "mdit-py-plugins"
+version = "0.4.2"
+description = "Collection of plugins for markdown-it-py"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "mdit_py_plugins-0.4.2-py3-none-any.whl", hash = "sha256:0c673c3f889399a33b95e88d2f0d111b4447bdfea7f237dab2d488f459835636"},
+    {file = "mdit_py_plugins-0.4.2.tar.gz", hash = "sha256:5f2cd1fdb606ddf152d37ec30e46101a60512bc0e5fa1a7002c36647b09e26b5"},
+]
+
+[package.dependencies]
+markdown-it-py = ">=1.0.0,<4.0.0"
+
+[package.extras]
+code-style = ["pre-commit"]
+rtd = ["myst-parser", "sphinx-book-theme"]
+testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions"]
 
 [[package]]
 name = "mdurl"
@@ -1618,19 +1658,18 @@ idna2008 = ["idna"]
 
 [[package]]
 name = "rich"
-version = "13.9.4"
+version = "15.0.0"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
-python-versions = ">=3.8.0"
+python-versions = ">=3.9.0"
 files = [
-    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
-    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
+    {file = "rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb"},
+    {file = "rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36"},
 ]
 
 [package.dependencies]
 markdown-it-py = ">=2.2.0"
 pygments = ">=2.13.0,<3.0.0"
-typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
@@ -2099,6 +2138,28 @@ files = [
 ]
 
 [[package]]
+name = "textual"
+version = "8.2.4"
+description = "Modern Text User Interface framework"
+optional = false
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "textual-8.2.4-py3-none-any.whl", hash = "sha256:a83bd3f0cc7125ca203845af753f9d6b6be030025ecd1b05cc75ebe645b9c4ba"},
+    {file = "textual-8.2.4.tar.gz", hash = "sha256:d4e2b2ddd7157191d00b228592b7c739ea080b7d792fd410f23ca75f05ea76c4"},
+]
+
+[package.dependencies]
+markdown-it-py = {version = ">=2.1.0", extras = ["linkify"]}
+mdit-py-plugins = "*"
+platformdirs = ">=3.6.0,<5"
+pygments = ">=2.19.2,<3.0.0"
+rich = ">=14.2.0"
+typing-extensions = ">=4.4.0,<5.0.0"
+
+[package.extras]
+syntax = ["tree-sitter (>=0.25.0)", "tree-sitter-bash (>=0.23.0)", "tree-sitter-css (>=0.23.0)", "tree-sitter-go (>=0.23.0)", "tree-sitter-html (>=0.23.0)", "tree-sitter-java (>=0.23.0)", "tree-sitter-javascript (>=0.23.0)", "tree-sitter-json (>=0.24.0)", "tree-sitter-markdown (>=0.3.0)", "tree-sitter-python (>=0.23.0)", "tree-sitter-regex (>=0.24.0)", "tree-sitter-rust (>=0.23.0)", "tree-sitter-sql (>=0.3.11)", "tree-sitter-toml (>=0.6.0)", "tree-sitter-xml (>=0.7.0)", "tree-sitter-yaml (>=0.6.0)"]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.6.0"
 description = "threadpoolctl"
@@ -2234,6 +2295,20 @@ files = [
 ]
 
 [[package]]
+name = "uc-micro-py"
+version = "1.0.3"
+description = "Micro subset of unicode data files for linkify-it-py projects."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "uc-micro-py-1.0.3.tar.gz", hash = "sha256:d321b92cff673ec58027c04015fcaa8bb1e005478643ff4a500882eaab88c48a"},
+    {file = "uc_micro_py-1.0.3-py3-none-any.whl", hash = "sha256:db1dffff340817673d7b466ec86114a9dc0e9d4d9b5ba229d9d60e5c12600cd5"},
+]
+
+[package.extras]
+test = ["coverage", "pytest", "pytest-cov"]
+
+[[package]]
 name = "urllib3"
 version = "2.6.3"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -2311,4 +2386,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4.0"
-content-hash = "c8d4ade0243fa7347da0b48569941618714f2ccab3f683562e7a0b4de1690ed9"
+content-hash = "88ecdb7fbfe114fe3169c8e9795086c4619cd9e7f53a048822ef4bc13655734b"
