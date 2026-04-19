@@ -1,0 +1,16 @@
+Screen {
+    background: #0f111a;
+    color: white;
+}
+
+Input {
+    margin: 1;
+}
+
+Button {
+    margin: 1;
+}
+
+TabPane {
+    padding: 1;
+}
