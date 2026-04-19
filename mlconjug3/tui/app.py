@@ -131,8 +131,13 @@ class Mlconjug3TUI(App):
 
         for verb in verbs:
             result = self.service.conjugate(verb)
+
             if result:
-                results_table.update_conjugation(verb, result.conjug_info)
+                results_table.update_conjugation(
+                    verb,
+                    result.conjug_info,
+                    append=True,  # 🔥 KEY FIX
+                )
 
     # ---------------- SETTINGS ----------------
     def on_select_changed(self, event: Select.Changed):
