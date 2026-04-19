@@ -34,7 +34,10 @@ class VerbBrowser(Vertical):
         self.list_view.clear()
 
         for verb in verbs[: self.max_results]:
-            self.list_view.append(ListItem(Label(verb)))
+            # Store verb directly on the item (important fix)
+            item = ListItem(Label(verb))
+            item.verb = verb
+            self.list_view.append(item)
 
     def on_input_changed(self, event: Input.Changed) -> None:
         query = event.value.strip().lower()
@@ -42,10 +45,19 @@ class VerbBrowser(Vertical):
         if not query:
             filtered = self.verbs[: self.max_results]
         else:
-            filtered = [v for v in self.verbs if query in v][: self.max_results]
+            filtered = [
+                v for v in self.verbs if query in v
+            ][: self.max_results]
 
         self._update_list(filtered)
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
-        label = event.item.query_one(Label)
-        self.post_message(VerbSelected(label.renderable))
+        # Robust retrieval (no Label internals)
+        item = event.item
+
+        verb = getattr(item, "verb", None)
+        if verb is None:
+            label = item.query_one(Label)
+            verb = str(label.renderable) if hasattr(label, "renderable") else label.plain
+
+        self.post_message(VerbSelected(verb))
