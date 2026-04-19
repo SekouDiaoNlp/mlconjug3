@@ -47,13 +47,7 @@ class Mlconjug3TUI(App):
 
             # -------- EXPLORER --------
             with TabPane("Explorer"):
-                yield Static("Verb Explorer")
-                yield VerbBrowser(
-                    verbs=self.verbs,
-                    irregular_verbs=set(self.verbs),
-                    id="browser",
-                )
-                yield ResultsTable(id="explorer_results")
+                yield VerbBrowser(self.verbs)
 
             with TabPane("Batch"):
                 yield Static("Batch mode coming soon")
