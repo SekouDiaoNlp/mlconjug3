@@ -3,14 +3,48 @@ Screen {
     color: white;
 }
 
+/* -----------------------------
+   INPUT UX FIX
+------------------------------ */
 Input {
     margin: 1;
+    width: 60%;
+    max-width: 80;
+    align: center middle;
 }
 
+/* Buttons */
 Button {
     margin: 1;
 }
 
+/* Tabs */
 TabPane {
     padding: 1;
+}
+
+/* -----------------------------
+   Panels (Explorer layout)
+------------------------------ */
+.panel {
+    padding: 1;
+    border: solid #222;
+
+    /* 🔥 important: prevents overflow layout break */
+    height: 1fr;
+}
+
+/* Titles */
+.title {
+    text-style: bold;
+    color: #8ab4f8;
+    margin-bottom: 1;
+}
+
+/* -----------------------------
+   Scroll container styling
+------------------------------ */
+#explorer_scroll {
+    height: 100%;
+    overflow-y: auto;
 }

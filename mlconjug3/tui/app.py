@@ -3,14 +3,15 @@ app.py
 
 Working Textual TUI for mlconjug3.
 
-Adds:
-- Batch conjugation tab
-- Settings tab (language + subject)
-- Proper service wiring
+Fixes:
+- Explorer selection now updates UI
+- Explorer results panel is scrollable
+- Improved layout stability
 """
 
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Input, TabbedContent, TabPane, Static, Button, Select
+from textual.containers import Horizontal, Vertical, VerticalScroll
 
 from mlconjug3.core.conjugation_service import ConjugationService
 from mlconjug3.tui.cache import ConjugationCache
@@ -35,6 +36,7 @@ class Mlconjug3TUI(App):
         self._timer = None
         self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
 
+    # ---------------- UI ----------------
     def compose(self) -> ComposeResult:
         yield Header()
 
@@ -42,24 +44,49 @@ class Mlconjug3TUI(App):
 
             # ---------------- CONJUGATE ----------------
             with TabPane("Conjugate"):
-                yield Static("Live conjugation")
-                yield Input(placeholder="Type a verb...", id="verb_input")
+                yield Static("Live conjugation", classes="title")
+
+                yield Input(
+                    placeholder="Type a verb...",
+                    id="verb_input"
+                )
+
                 yield ResultsTable(id="results")
 
             # ---------------- EXPLORER ----------------
             with TabPane("Explorer"):
-                yield VerbBrowser(self.verbs)
+
+                with Horizontal():
+
+                    # LEFT: browser
+                    with Vertical(classes="panel"):
+                        yield Static("Verb Explorer", classes="title")
+                        yield VerbBrowser(self.verbs)
+
+                    # RIGHT: scrollable results panel
+                    with Vertical(classes="panel"):
+                        yield Static("Verb Details", classes="title")
+
+                        # 🔥 SCROLL CONTAINER ADDED
+                        with VerticalScroll(id="explorer_scroll"):
+                            yield ResultsTable(id="explorer_results")
 
             # ---------------- BATCH ----------------
             with TabPane("Batch"):
                 yield Static("Enter verbs separated by spaces or commas")
-                yield Input(placeholder="aller, manger, finir", id="batch_input")
+
+                yield Input(
+                    placeholder="aller, manger, finir",
+                    id="batch_input"
+                )
+
                 yield Button("Run batch", id="run_batch")
                 yield ResultsTable(id="batch_results")
 
             # ---------------- SETTINGS ----------------
             with TabPane("Settings"):
                 yield Static("Language")
+
                 yield Select(
                     options=[
                         ("French", "fr"),
@@ -74,6 +101,7 @@ class Mlconjug3TUI(App):
                 )
 
                 yield Static("Subject format")
+
                 yield Select(
                     options=[
                         ("Abbrev", "abbrev"),
@@ -84,6 +112,17 @@ class Mlconjug3TUI(App):
                 )
 
         yield Footer()
+
+    # ---------------- EXPLORER SELECTION ----------------
+    def on_verb_selected(self, message: VerbSelected):
+        verb = message.verb
+        result = self.service.conjugate(verb)
+
+        if not result:
+            return
+
+        table = self.query_one("#explorer_results", ResultsTable)
+        table.update_conjugation(verb, result.conjug_info)
 
     # ---------------- LIVE CONJUGATION ----------------
     def on_input_changed(self, event: Input.Changed):
@@ -104,12 +143,10 @@ class Mlconjug3TUI(App):
         if not verb:
             return
 
-        key = f"{self.service.language}:{verb}:{self.service.subject}"
-
         def compute(_):
             return self.service.conjugate(verb)
 
-        result = self.cache.get(key, compute)
+        result = self.cache.get(verb, compute)
 
         table = self.query_one("#results", ResultsTable)
         if result:
@@ -121,6 +158,7 @@ class Mlconjug3TUI(App):
             return
 
         input_widget = self.query_one("#batch_input", Input)
+
         verbs = [
             v.strip()
             for v in input_widget.value.replace(",", " ").split()
@@ -132,7 +170,11 @@ class Mlconjug3TUI(App):
         for verb in verbs:
             result = self.service.conjugate(verb)
             if result:
-                results_table.update_conjugation(verb, result.conjug_info)
+                results_table.update_conjugation(
+                    verb,
+                    result.conjug_info,
+                    append=True
+                )
 
     # ---------------- SETTINGS ----------------
     def on_select_changed(self, event: Select.Changed):
