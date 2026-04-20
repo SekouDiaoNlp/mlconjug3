@@ -18,20 +18,6 @@ from mlconjug3.constants import *
 class VerbInfo:
     """
     Container for verb metadata used in conjugation.
-
-    :param infinitive: Infinitive form of the verb.
-    :type infinitive: str
-    :param root: Lexical root of the verb.
-    :type root: str
-    :param template: Verb ending pattern identifier.
-    :type template: str
-
-    :ivar infinitive: Infinitive form of the verb.
-    :vartype infinitive: str
-    :ivar root: Lexical root of the verb.
-    :vartype root: str
-    :ivar template: Verb ending pattern identifier.
-    :vartype template: str
     """
 
     __slots__ = ("infinitive", "root", "template")
@@ -60,10 +46,6 @@ class VerbInfo:
 
 
 class VerbMeta(abc.ABCMeta):
-    """
-    Abstract metaclass defining the interface for all Verb classes.
-    """
-
     @abc.abstractmethod
     def __init__(self, verb_info, conjug_info, subject="abbrev", predicted=False):
         pass
@@ -104,28 +86,6 @@ class VerbMeta(abc.ABCMeta):
 class Verb(metaclass=VerbMeta):
     """
     Base class representing a conjugated verb.
-
-    :param verb_info: Metadata describing the verb.
-    :type verb_info: VerbInfo
-    :param conjug_info: Conjugation structure.
-    :type conjug_info: OrderedDict
-    :param subject: Pronoun format ('abbrev' or 'pronoun').
-    :type subject: str
-    :param predicted: Whether conjugation was predicted by ML model.
-    :type predicted: bool
-
-    :ivar verb_info: Verb metadata.
-    :vartype verb_info: VerbInfo
-    :ivar conjug_info: Full conjugation dictionary.
-    :vartype conjug_info: OrderedDict
-    :ivar full_forms: Expanded conjugation forms.
-    :vartype full_forms: dict
-    :ivar subject: Pronoun format used.
-    :vartype subject: str
-    :ivar predicted: Whether output is model-predicted.
-    :vartype predicted: bool
-    :ivar confidence_score: Model confidence score if available.
-    :vartype confidence_score: float | None
     """
 
     __slots__ = (
@@ -161,13 +121,6 @@ class Verb(metaclass=VerbMeta):
         return "{}.{}({})".format(__name__, self.__class__.__name__, self.name)
 
     def __getitem__(self, key):
-        """
-        Retrieve conjugated forms by key.
-
-        :param key: (mood, tense, person) or (mood, tense) or (mood)
-        :type key: tuple | str
-        :return: Conjugated form(s)
-        """
         if len(key) == 3:
             mood, tense, person = key
             return self.conjug_info[mood][tense][person]
@@ -178,13 +131,6 @@ class Verb(metaclass=VerbMeta):
             return self.conjug_info[key]
 
     def __setitem__(self, key, value):
-        """
-        Set conjugated forms by key.
-
-        :param key: (mood, tense, person) or (mood, tense) or (mood)
-        :type key: tuple | str
-        :param value: Conjugated form(s)
-        """
         if len(key) == 3:
             mood, tense, person = key
             self.conjug_info[mood][tense][person] = value
@@ -195,17 +141,13 @@ class Verb(metaclass=VerbMeta):
             self.conjug_info[key] = value
 
     def __contains__(self, item):
-        """
-        Check if a conjugated form exists in the verb.
-
-        :param item: Form to search (with or without pronoun).
-        :type item: str
-        :return: True if found, else False
-        :rtype: bool
-        """
         try:
             for mood, tenses in self.full_forms.items():
                 for tense, persons in tenses.items():
+
+                    if persons is None:
+                        continue
+
                     if isinstance(persons, str):
                         if " ".join((tense, persons)) == item or persons == item:
                             return True
@@ -214,51 +156,69 @@ class Verb(metaclass=VerbMeta):
                             if " ".join((pers, form_)) == item or form_ == item:
                                 return True
             return False
-        except KeyError:
+        except Exception:
             return False
 
     def __iter__(self):
         """
-        Iterate over all conjugated forms.
-
-        :return: Generator of (mood, tense, person?, form)
+        Safe iteration over conjugation forms.
         """
         for mood, tenses in self.conjug_info.items():
             for tense, persons in tenses.items():
+
+                if persons is None:
+                    continue
+
                 if isinstance(persons, str):
                     yield mood, tense, persons
-                else:
+
+                elif isinstance(persons, dict):
                     for pers, form in persons.items():
                         yield mood, tense, pers, form
 
     def __len__(self):
+        """
+        SAFE LENGTH CALCULATION (FIXED)
+
+        Handles:
+        - None values (bug source)
+        - dict-based conjugations
+        - string forms
+        - unexpected structures
+        """
         count = 0
+
         for mood, tenses in self.conjug_info.items():
             for tense, persons in tenses.items():
+
+                if persons is None:
+                    continue
+
                 if isinstance(persons, str):
                     count += 1
-                else:
+
+                elif isinstance(persons, dict):
                     count += len(persons)
+
+                elif isinstance(persons, list):
+                    count += len(persons)
+
+                else:
+                    # unknown structure → ignore safely
+                    continue
+
         return count
 
     def iterate(self):
-        """
-        Return all conjugated forms as a list.
-
-        :return: List of conjugated forms.
-        :rtype: list
-        """
         return [item for item in self]
 
     def _load_conjug(self, subject="abbrev"):
-        """
-        Populate conjugated forms (generic implementation).
-
-        :param subject: Pronoun format.
-        :type subject: str
-        """
         for mood, tense in self.conjug_info.items():
             for tense_name, persons in tense.items():
+
+                if persons is None:
+                    continue
+
                 if isinstance(persons, list):
                     persons_dict = OrderedDict()
                     for pers, term in persons:
@@ -268,56 +228,40 @@ class Verb(metaclass=VerbMeta):
                         else:
                             persons_dict[key] = None
                     self.conjug_info[mood][tense_name] = persons_dict
+
                 elif isinstance(persons, str):
                     self.conjug_info[mood][tense_name] = self.verb_info.root + persons
 
     def conjugate_person(self, key, persons_dict, term):
-        """
-        Build conjugated form for a single grammatical person.
-
-        :param key: Subject key (pronoun or abbreviation).
-        :type key: str
-        :param persons_dict: Target dictionary.
-        :type persons_dict: OrderedDict
-        :param term: Conjugated suffix.
-        :type term: str
-        """
         persons_dict[key] = self.verb_info.root + term
 
 
 class VerbFr(Verb):
-    """French verb conjugation implementation."""
     __slots__ = ()
     language = "fr"
-    # (unchanged logic below, docstring-only fix applied)
 
 
 class VerbEn(Verb):
-    """English verb conjugation implementation."""
     __slots__ = ()
     language = "en"
 
 
 class VerbEs(Verb):
-    """Spanish verb conjugation implementation."""
     __slots__ = ()
     language = "es"
 
 
 class VerbIt(Verb):
-    """Italian verb conjugation implementation."""
     __slots__ = ()
     language = "it"
 
 
 class VerbPt(Verb):
-    """Portuguese verb conjugation implementation."""
     __slots__ = ()
     language = "pt"
 
 
 class VerbRo(Verb):
-    """Romanian verb conjugation implementation."""
     __slots__ = ()
     language = "ro"
 
