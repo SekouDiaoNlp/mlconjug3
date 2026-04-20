@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Generator
 from textual.containers import Vertical
 from textual.widgets import Input, ListView, ListItem
 from textual.message import Message
@@ -27,7 +27,7 @@ class VerbBrowser(Vertical):
 
     def __init__(self, verbs: List[str], max_results: int = 100, **kwargs: Any) -> None: ...
 
-    def compose(self): ...
+    def compose(self) -> Generator[Any, None, None]: ...
 
     def on_mount(self) -> None: ...
 

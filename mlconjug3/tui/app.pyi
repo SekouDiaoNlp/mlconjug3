@@ -1,23 +1,30 @@
-from typing import Any, List, Optional
+from __future__ import annotations
+
+from typing import Any, List, ClassVar
+
 from textual.app import App, ComposeResult
-from textual.widgets import Input, Static, Select, Button
+from textual.widgets import Input, Select, Button
 
 from mlconjug3.tui.state import TUIState
 from mlconjug3.core.conjugation_service import ConjugationService
 from mlconjug3.tui.cache import ConjugationCache
 
 
-class Mlconjug3TUI(App):
-    CSS_PATH: str
-    DEBOUNCE_DELAY: float
+class Mlconjug3TUI(App[None]):
+    """
+    Typed interface for the mlconjug3 TUI application.
+    """
 
-    def __init__(self) -> None: ...
+    CSS_PATH: ClassVar[str]
+    DEBOUNCE_DELAY: ClassVar[float]
 
     state: TUIState
     service: ConjugationService
     cache: ConjugationCache
 
     verbs: List[str]
+
+    def __init__(self) -> None: ...
 
     def compose(self) -> ComposeResult: ...
 
