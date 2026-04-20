@@ -218,10 +218,15 @@ class Mlconjug3TUI(App):
             result = self.service.conjugate(verb)
 
             if result:
+                # FIX: normalize result (safe single-object access)
+                verb_obj = result[0] if isinstance(result, list) else result
+
                 results_table.update_conjugation(
                     verb,
-                    result.conjug_info,
-                    append=True
+                    verb_obj.conjug_info,
+                    append=True,
+                    mode="ML" if getattr(verb_obj, "predicted", False) else "RULE",
+                    confidence=getattr(verb_obj, "confidence_score", None),
                 )
 
     # ---------------- SETTINGS ----------------

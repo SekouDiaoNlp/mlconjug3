@@ -1,7 +1,7 @@
 """
 results_table.py
 
-Tree-based conjugation explorer (IMPROVED VERSION)
+Tree-based conjugation explorer (IMPROVED + FIXED BATCH SUPPORT)
 """
 
 from textual.widgets import Tree, Static
@@ -11,25 +11,28 @@ from textual.app import ComposeResult
 class ResultsTable(Static):
     """
     Tree-based conjugation explorer.
+    Now supports multi-verb batch mode correctly.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # FIX: empty root label (no "No verb loaded")
         self._tree = Tree("")
         self._tree.show_root = True
+
+        # 🔥 FIX: batch-aware storage
+        self._batch_mode = False
+        self._batch_roots = {}
 
     def compose(self) -> ComposeResult:
         yield self._tree
 
     def clear(self):
-        """
-        Clear the tree safely.
-        """
         self._tree.root.label = ""
         for child in list(self._tree.root.children):
             child.remove()
+
+        self._batch_roots.clear()
         self._tree.refresh()
 
     # -----------------------------
@@ -61,17 +64,47 @@ class ResultsTable(Static):
         confidence: float = None,
         mode: str = "RULE",
     ):
-        badge = self._build_badge(mode, confidence)
+        """
+        FIXED:
+        - append=True now preserves previous verbs (batch mode)
+        """
+
+        badge = self._build_badge(
+            mode if mode in ("ML", "RULE") else "RULE",
+            confidence
+        )
         tree = self._tree
 
-        # Reset root
-        tree.root.label = f"{verb}  [{badge}]"
+        # -------------------------
+        # BATCH MODE ENABLED
+        # -------------------------
+        if append:
+            self._batch_mode = True
 
-        for child in list(tree.root.children):
-            child.remove()
+            # create or reuse root node per verb
+            if verb in self._batch_roots:
+                verb_node = self._batch_roots[verb]
+                verb_node.children.clear()
+            else:
+                verb_node = tree.root.add(f"{verb} [{badge}]", expand=False)
+                self._batch_roots[verb] = verb_node
 
+        else:
+            # normal mode → reset everything
+            self._batch_mode = False
+            self._batch_roots.clear()
+
+            tree.root.label = f"{verb}  [{badge}]"
+            for child in list(tree.root.children):
+                child.remove()
+
+            verb_node = tree.root
+
+        # -------------------------
+        # BUILD TREE
+        # -------------------------
         for mood, tenses in conjugation.items():
-            mood_node = tree.root.add(mood.capitalize(), expand=False)
+            mood_node = verb_node.add(mood.capitalize(), expand=False)
 
             for tense, persons in tenses.items():
                 tense_node = mood_node.add(tense.capitalize(), expand=False)
@@ -79,10 +112,7 @@ class ResultsTable(Static):
                 if isinstance(persons, dict):
                     for person, form in persons.items():
                         clean_form = self._normalize_form(verb, form)
-
-                        # LEAF NODE → no expand arrow
-                        node = tense_node.add_leaf(f"{person} → {clean_form}")
-
+                        tense_node.add_leaf(f"{person} ? {clean_form}")
                 else:
                     clean_form = self._normalize_form(verb, persons)
                     tense_node.add_leaf(clean_form)
