@@ -1,11 +1,35 @@
 """
 app.py
 
-Improved TUI (UX + Interaction upgrades)
+Main TUI application for mlconjug3.
+
+This module implements a Textual-based terminal user interface for:
+- Interactive verb conjugation
+- Multi-language support
+- Batch processing of verbs
+- Verb exploration and navigation
+
+The interface is designed to be:
+- Keyboard-first
+- Fast and responsive
+- Suitable for both learners and power users
 """
 
+from __future__ import annotations
+
+from typing import Optional, List, Any
+
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, TabbedContent, TabPane, Static, Button, Select
+from textual.widgets import (
+    Header,
+    Footer,
+    Input,
+    TabbedContent,
+    TabPane,
+    Static,
+    Button,
+    Select,
+)
 from textual.containers import Horizontal, Vertical, VerticalScroll
 
 from mlconjug3.core.conjugation_service import ConjugationService
@@ -16,25 +40,61 @@ from mlconjug3.tui.state import TUIState
 
 
 class Mlconjug3TUI(App):
+    """
+    Main application class for the mlconjug3 TUI.
 
-    CSS_PATH = "theme.css"
-    DEBOUNCE_DELAY = 0.25
+    This class orchestrates all UI components, services, and state
+    management required for interactive verb conjugation.
 
-    def __init__(self):
+    Attributes
+    ----------
+    CSS_PATH : str
+        Path to the CSS theme file.
+    DEBOUNCE_DELAY : float
+        Delay used to throttle input updates.
+
+    state : TUIState
+        Global application state manager.
+
+    service : ConjugationService
+        Backend service handling conjugation logic.
+
+    cache : ConjugationCache
+        LRU cache for conjugation results.
+    """
+
+    CSS_PATH: str = "theme.css"
+    DEBOUNCE_DELAY: float = 0.25
+
+    def __init__(self) -> None:
+        """
+        Initialize the TUI application and core services.
+        """
         super().__init__()
 
-        self.state = TUIState()
-        self.service = ConjugationService(language="fr")
-        self.cache = ConjugationCache()
+        self.state: TUIState = TUIState()
+        self.service: ConjugationService = ConjugationService(language="fr")
+        self.cache: ConjugationCache = ConjugationCache()
 
-        self._timer = None
-        self._last_valid = None
+        self._timer: Optional[Any] = None
+        self._last_valid: Optional[str] = None
 
-        self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
+        self.verbs: List[str] = list(
+            self.service.conjugator.conjug_manager.verbs.keys()
+        )
 
-    # ---------------- UI ----------------
+    # -------------------------
+    # UI LAYOUT
+    # -------------------------
     def compose(self) -> ComposeResult:
+        """
+        Compose the UI layout.
 
+        Returns
+        -------
+        ComposeResult
+            Generator yielding UI components.
+        """
         yield Header()
         yield Static(self._status_bar_text(), id="status_bar")
 
@@ -44,13 +104,8 @@ class Mlconjug3TUI(App):
             with TabPane("Conjugate"):
                 yield Static("Live conjugation", classes="title")
 
-                yield Input(
-                    placeholder="Type a verb...",
-                    id="verb_input"
-                )
-
+                yield Input(placeholder="Type a verb...", id="verb_input")
                 yield Static("", id="input_feedback", markup=False)
-
                 yield ResultsTable(id="results")
 
             # ---------------- EXPLORER ----------------
@@ -74,7 +129,7 @@ class Mlconjug3TUI(App):
 
                 yield Input(
                     placeholder="aller, manger, finir",
-                    id="batch_input"
+                    id="batch_input",
                 )
 
                 yield Button("Run batch", id="run_batch")
@@ -111,26 +166,64 @@ class Mlconjug3TUI(App):
 
         yield Footer()
 
-    # ---------------- STATUS BAR ----------------
+    # -------------------------
+    # STATUS BAR
+    # -------------------------
     def _status_bar_text(self) -> str:
+        """
+        Build the status bar text.
+
+        Returns
+        -------
+        str
+            Formatted status string.
+        """
         return (
             f"LANG: {self.state.language.upper()} | "
             f"MODE: {self.state.subject.upper()} | "
             f"HISTORY: {len(self.state.history)}"
         )
 
-    def _refresh_status_bar(self):
+    def _refresh_status_bar(self) -> None:
+        """
+        Refresh the status bar display.
+        """
         self.query_one("#status_bar", Static).update(self._status_bar_text())
 
-    # ---------------- VALIDATION ----------------
+    # -------------------------
+    # VALIDATION
+    # -------------------------
     def _is_valid(self, verb: str) -> bool:
+        """
+        Validate whether a verb is supported by the current language.
+
+        Parameters
+        ----------
+        verb : str
+            Verb to validate.
+
+        Returns
+        -------
+        bool
+            True if valid, False otherwise.
+        """
         try:
             return self.service.conjugator.conjug_manager.is_valid_verb(verb)
         except Exception:
             return False
 
-    # ---------------- LIVE INPUT ----------------
-    def on_input_changed(self, event: Input.Changed):
+    # -------------------------
+    # LIVE INPUT
+    # -------------------------
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """
+        Handle live input changes in the conjugation tab.
+
+        Parameters
+        ----------
+        event : Input.Changed
+            Textual input change event.
+        """
         if event.input.id != "verb_input":
             return
 
@@ -144,7 +237,15 @@ class Mlconjug3TUI(App):
             lambda: self._update_verb(verb),
         )
 
-    def _update_verb(self, verb: str):
+    def _update_verb(self, verb: str) -> None:
+        """
+        Update conjugation view for a given verb.
+
+        Parameters
+        ----------
+        verb : str
+            Verb to conjugate.
+        """
         if not verb:
             self.query_one("#results", ResultsTable).clear()
             return
@@ -162,18 +263,30 @@ class Mlconjug3TUI(App):
         result = self.cache.get(verb, lambda _: self.service.conjugate(verb))
 
         if result:
+            verb_obj = result[0] if isinstance(result, list) else result
+
             self.state.add_history(verb)
             self._refresh_status_bar()
 
             table.update_conjugation(
                 verb,
-                result.conjug_info,
-                mode="ML" if getattr(result, "predicted", False) else "RULE",
-                confidence=getattr(result, "confidence_score", None),
+                verb_obj.conjug_info,
+                mode="ML" if getattr(verb_obj, "predicted", False) else "RULE",
+                confidence=getattr(verb_obj, "confidence_score", None),
             )
 
-    # ---------------- EXPLORER ----------------
-    def on_verb_selected(self, message: VerbSelected):
+    # -------------------------
+    # EXPLORER
+    # -------------------------
+    def on_verb_selected(self, message: VerbSelected) -> None:
+        """
+        Handle verb selection from the explorer panel.
+
+        Parameters
+        ----------
+        message : VerbSelected
+            Selected verb message event.
+        """
         verb = message.verb
 
         self.state.add_history(verb)
@@ -190,16 +303,37 @@ class Mlconjug3TUI(App):
             verb, result.conjug_info
         )
 
-    # ---------------- BATCH ----------------
-    def on_input_submitted(self, event: Input.Submitted):
+    # -------------------------
+    # BATCH PROCESSING
+    # -------------------------
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """
+        Handle batch input submission.
+
+        Parameters
+        ----------
+        event : Input.Submitted
+            Input submission event.
+        """
         if event.input.id == "batch_input":
             self._run_batch()
 
-    def on_button_pressed(self, event: Button.Pressed):
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Handle button press events.
+
+        Parameters
+        ----------
+        event : Button.Pressed
+            Button event.
+        """
         if event.button.id == "run_batch":
             self._run_batch()
 
-    def _run_batch(self):
+    def _run_batch(self) -> None:
+        """
+        Execute batch conjugation for multiple verbs.
+        """
         input_widget = self.query_one("#batch_input", Input)
         results_table = self.query_one("#batch_results", ResultsTable)
 
@@ -218,7 +352,6 @@ class Mlconjug3TUI(App):
             result = self.service.conjugate(verb)
 
             if result:
-                # FIX: normalize result (safe single-object access)
                 verb_obj = result[0] if isinstance(result, list) else result
 
                 results_table.update_conjugation(
@@ -229,8 +362,18 @@ class Mlconjug3TUI(App):
                     confidence=getattr(verb_obj, "confidence_score", None),
                 )
 
-    # ---------------- SETTINGS ----------------
-    def on_select_changed(self, event: Select.Changed):
+    # -------------------------
+    # SETTINGS
+    # -------------------------
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """
+        Handle language and subject configuration changes.
+
+        Parameters
+        ----------
+        event : Select.Changed
+            Selection change event.
+        """
         if event.select.id == "lang_select":
             self.service.set_language(event.value)
             self.state.language = event.value
@@ -238,12 +381,15 @@ class Mlconjug3TUI(App):
             self._refresh_status_bar()
 
         elif event.select.id == "subject_select":
-            self.service.subject = event.value
+            self.service.set_subject(event.value)
             self.state.subject = event.value
             self._refresh_status_bar()
 
 
-def main():
+def main() -> None:
+    """
+    Entry point for the TUI application.
+    """
     Mlconjug3TUI().run()
 
 

@@ -1,8 +1,20 @@
 """
 results_table.py
 
-Tree-based conjugation explorer (ROBUST + CRASH-SAFE VERSION)
+Tree-based conjugation explorer widget for mlconjug3 TUI.
+
+This widget renders hierarchical conjugation data in a safe,
+interactive tree structure using Textual's Tree component.
+
+It is designed to:
+- Prevent runtime crashes caused by malformed conjugation data
+- Render both rule-based and ML-based conjugation outputs
+- Support batch and single-verb visualization modes
 """
+
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
 
 from textual.widgets import Tree, Static
 from textual.app import ComposeResult
@@ -10,43 +22,83 @@ from textual.app import ComposeResult
 
 class ResultsTable(Static):
     """
-    Tree-based conjugation explorer.
+    Tree-based conjugation explorer widget.
 
-    FIXES:
-    - Prevents NoneType crashes in Textual Tree
-    - Safe rendering for ML + rule-based conjugation outputs
-    - Handles missing / incomplete linguistic data gracefully
+    This widget displays conjugation data in a hierarchical tree format:
+    mood → tense → persons/forms.
+
+    It supports:
+    - Single verb display mode
+    - Batch verb accumulation mode
+    - Safe rendering of incomplete or malformed data
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Initialize the ResultsTable widget.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments passed to Static.
+        **kwargs : Any
+            Keyword arguments passed to Static.
+        """
         super().__init__(*args, **kwargs)
 
-        self._tree = Tree("")
+        self._tree: Tree = Tree("")
         self._tree.show_root = True
 
-        self._batch_mode = False
-        self._batch_roots = {}
+        self._batch_mode: bool = False
+        self._batch_roots: Dict[str, Tree.Node] = {}
 
+    # -------------------------
+    # LIFECYCLE
+    # -------------------------
     def compose(self) -> ComposeResult:
+        """
+        Compose the widget layout.
+
+        Yields
+        ------
+        ComposeResult
+            The tree widget used for rendering conjugation data.
+        """
         yield self._tree
 
-    # -----------------------------
-    # SAFE HELPERS
-    # -----------------------------
-    def _safe_form(self, value):
+    # -------------------------
+    # SAFE UTILITIES
+    # -------------------------
+    def _safe_form(self, value: Any) -> str:
         """
-        Ensures Tree never receives None or invalid values.
+        Safely convert a conjugation form into a displayable string.
+
+        This method ensures that None or invalid values do not crash
+        the Tree renderer.
+
+        Parameters
+        ----------
+        value : Any
+            Raw conjugation form value.
+
+        Returns
+        -------
+        str
+            Sanitized string representation of the value.
         """
         if value is None:
-            return "—"
+            return "?"
 
         if isinstance(value, str):
             value = value.strip()
-            return value if value else "—"
+            return value if value else "?"
 
         return str(value)
 
-    def clear(self):
+    def clear(self) -> None:
+        """
+        Clear the tree content and reset internal state.
+        """
         self._tree.root.label = ""
 
         for child in list(self._tree.root.children):
@@ -55,21 +107,47 @@ class ResultsTable(Static):
         self._batch_roots.clear()
         self._tree.refresh()
 
-    # -----------------------------
-    def _build_badge(self, mode: str, confidence: float = None) -> str:
+    def _build_badge(self, mode: str, confidence: Optional[float]) -> str:
+        """
+        Build a mode badge for display in the tree root label.
+
+        Parameters
+        ----------
+        mode : str
+            Conjugation mode ("ML" or "RULE").
+        confidence : float, optional
+            ML confidence score if available.
+
+        Returns
+        -------
+        str
+            Formatted badge string.
+        """
         if mode == "ML":
             if confidence is not None:
                 return f"ML ({confidence:.2f})"
             return "ML"
         return "RULE"
 
-    def _normalize_form(self, verb: str, form: str):
+    def _normalize_form(self, verb: str, form: Any) -> str:
         """
-        Keeps original logic but ensures safe output.
+        Normalize conjugated forms by removing duplicated verb roots.
+
+        Parameters
+        ----------
+        verb : str
+            Base infinitive verb.
+        form : Any
+            Raw conjugated form.
+
+        Returns
+        -------
+        str
+            Normalized conjugated form.
         """
         form = self._safe_form(form)
 
-        if form == "—":
+        if form == "?":
             return form
 
         if form.startswith(verb + verb):
@@ -80,23 +158,40 @@ class ResultsTable(Static):
 
         return form
 
-    # -----------------------------
+    # -------------------------
+    # MAIN API
+    # -------------------------
     def update_conjugation(
         self,
         verb: str,
-        conjugation: dict,
+        conjugation: Dict[str, Any],
         append: bool = False,
-        confidence: float = None,
+        confidence: Optional[float] = None,
         mode: str = "RULE",
-    ):
+    ) -> None:
         """
-        SAFE TREE RENDERING:
-        - Never allows None into Textual Tree nodes
-        - Prevents crash when ML returns incomplete conjugations
-        """
+        Render conjugation data into the tree view.
 
-        badge = self._build_badge(mode, confidence)
-        tree = self._tree
+        Parameters
+        ----------
+        verb : str
+            Infinitive verb being displayed.
+        conjugation : dict
+            Nested conjugation structure:
+            {mood -> tense -> person -> form}
+        append : bool, optional
+            If True, adds to batch view instead of replacing.
+        confidence : float, optional
+            ML confidence score if available.
+        mode : str, optional
+            Conjugation mode ("ML" or "RULE").
+
+        Returns
+        -------
+        None
+        """
+        badge: str = self._build_badge(mode, confidence)
+        tree: Tree = self._tree
 
         # -------------------------
         # BATCH MODE
@@ -123,7 +218,7 @@ class ResultsTable(Static):
             verb_node = tree.root
 
         # -------------------------
-        # TREE BUILDING (SAFE)
+        # TREE BUILDING
         # -------------------------
         for mood, tenses in (conjugation or {}).items():
             mood_node = verb_node.add(str(mood).capitalize(), expand=False)
@@ -131,7 +226,7 @@ class ResultsTable(Static):
             for tense, persons in (tenses or {}).items():
                 tense_node = mood_node.add(str(tense).capitalize(), expand=False)
 
-                # CASE: dict (standard)
+                # CASE 1: dict structure
                 if isinstance(persons, dict):
                     for person, form in persons.items():
                         clean_form = self._normalize_form(verb, form)
@@ -139,7 +234,7 @@ class ResultsTable(Static):
 
                         tense_node.add_leaf(f"{person} ? {clean_form}")
 
-                # CASE: string or fallback
+                # CASE 2: string fallback
                 else:
                     clean_form = self._normalize_form(verb, persons)
                     clean_form = self._safe_form(clean_form)
