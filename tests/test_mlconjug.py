@@ -10,6 +10,7 @@ import pickle
 
 from sklearn.exceptions import ConvergenceWarning
 from click.testing import CliRunner
+from unittest.mock import patch, mock_open
 
 from mlconjug3 import (
     Conjugator, DataSet, Model, Verbiste,
@@ -150,30 +151,68 @@ class TestConjugManagerCoverage:
         with pytest.raises(ValueError):
             cm._load_cache(str(fake_file))
 
-    # ---------------------------
-    # NEW: UNIMORPH TESTS
-    # ---------------------------
+    # =====================================================
+    # 🔥 NEW: UNIMORPH TESTS (IMPROVED COVERAGE)
+    # =====================================================
 
     def test_unimorph_language_mapping(self):
         cm = ConjugManager(language="fr", use_unimorph=True)
         assert cm.UNIMORPH_LANG_MAP["fr"] == "fra"
 
-    def test_unimorph_loader_fr(self):
+    def test_unimorph_loader_structure(self):
         cm = ConjugManager(language="fr", use_unimorph=True)
 
-        # Should load UniMorph data structures
         assert isinstance(cm.verbs, dict)
-        assert cm.verbs is not None
+        assert isinstance(cm.conjugations, dict)
 
-        # conjugations may be dict or OrderedDict depending on loader
-        assert cm.conjugations is not None
+        if cm.verbs:
+            sample = next(iter(cm.verbs.values()))
+            assert "root" in sample
+            assert "template" in sample
 
-    def test_unimorph_loader_non_empty(self):
+    def test_unimorph_lang_map_all_supported(self):
         cm = ConjugManager(language="fr", use_unimorph=True)
 
-        # At least structural integrity checks
-        assert len(cm.verbs) >= 0
-        assert len(cm.conjugations) >= 0
+        for k, v in cm.UNIMORPH_LANG_MAP.items():
+            assert isinstance(k, str)
+            assert isinstance(v, str)
+            assert len(v) == 3
+
+    def test_unimorph_missing_language_mapping(self):
+        cm = ConjugManager.__new__(ConjugManager)
+        cm.language = "xx"
+
+        with pytest.raises(ValueError):
+            cm._load_unimorph()
+
+    @patch("builtins.open", new_callable=mock_open, read_data='{"verb": {"root": "r", "template": "t"}}')
+    def test_unimorph_loader_mocked_files(self, mock_file):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        cm._load_unimorph()
+
+        assert isinstance(cm.verbs, dict)
+
+    def test_get_conjug_info_unimorph_safe(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        if cm.conjugations:
+            template = next(iter(cm.conjugations))
+            result = cm.get_conjug_info(template)
+            assert result is None or isinstance(result, dict)
+
+    def test_backend_switching_consistency(self):
+        cm1 = ConjugManager(language="fr", use_unimorph=False)
+        cm2 = ConjugManager(language="fr", use_unimorph=True)
+
+        assert isinstance(cm1.verbs, dict)
+        assert isinstance(cm2.verbs, dict)
+
+    def test_safe_conjugation_missing_keys(self):
+        cm = ConjugManager(language="fr", use_unimorph=False)
+
+        assert cm.get_conjug_info("___does_not_exist___") is None
+        assert cm.get_verb_info("___does_not_exist___") is None
 
 
 class TestConjugatorStress:
