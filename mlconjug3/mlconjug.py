@@ -177,7 +177,12 @@ class Conjugator:
         if verb_info is None or conjug_info is None:
             return None
 
-        verb_object = VERBS[self.language](verb_info, conjug_info, subject)
+        verb_object = VERBS[self.language](
+            verb_info,
+            conjug_info,
+            subject,
+            predicted=True  # <-- IMPORTANT FIX
+        )
 
         if confidence_score is not None:
             verb_object.confidence_score = confidence_score

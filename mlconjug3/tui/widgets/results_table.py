@@ -1,7 +1,10 @@
 """
 results_table.py
 
-Improved renderer with optional ML metadata support.
+Improved renderer with:
+- RULE vs ML detection
+- Confidence display
+- Cleaner UX badges
 """
 
 from rich.table import Table
@@ -20,6 +23,24 @@ class ResultsTable(Static):
         super().__init__(*args, **kwargs)
         self._tables = []
 
+    # -----------------------------
+    # BADGE SYSTEM (NEW UX CORE)
+    # -----------------------------
+    def _build_badge(self, mode: str, confidence: float = None) -> str:
+        """
+        Returns a clean status badge for the conjugation source.
+        """
+
+        if mode == "ML":
+            if confidence is not None:
+                return f"🤖 ML ({confidence:.2f})"
+            return "🤖 ML"
+
+        return "✓ RULE"
+
+    # -----------------------------
+    # MAIN RENDER METHOD
+    # -----------------------------
     def update_conjugation(
         self,
         verb: str,
@@ -40,15 +61,9 @@ class ResultsTable(Static):
         mode : str ("RULE" | "ML")
         """
 
-        title = f"Conjugation of '{verb}'"
+        badge = self._build_badge(mode, confidence)
 
-        # -------------------------
-        # ML / RULE BADGE
-        # -------------------------
-        if mode == "ML" and confidence is not None:
-            title += f"  ⚠ ML ({confidence})"
-        else:
-            title += "  ✓ RULE"
+        title = f"Conjugation of '{verb}'   [{badge}]"
 
         table = Table(
             title=title,
@@ -80,5 +95,3 @@ class ResultsTable(Static):
         else:
             self._tables = [table]
             self.update(table)
-
-

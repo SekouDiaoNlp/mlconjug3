@@ -6,6 +6,7 @@ Improved TUI:
 - Verb history tracking
 - State integration
 - Cleaner explorer UX
+- INPUT VALIDATION FIX (IMPORTANT)
 """
 
 from textual.app import App, ComposeResult
@@ -35,6 +36,8 @@ class Mlconjug3TUI(App):
         self.cache = ConjugationCache()
 
         self._timer = None
+        self._last_valid = None
+
         self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
 
     # ---------------- UI ----------------
@@ -42,11 +45,7 @@ class Mlconjug3TUI(App):
 
         yield Header()
 
-        # ---------------- STATUS BAR ----------------
-        yield Static(
-            self._status_bar_text(),
-            id="status_bar"
-        )
+        yield Static(self._status_bar_text(), id="status_bar")
 
         with TabbedContent():
 
@@ -58,6 +57,8 @@ class Mlconjug3TUI(App):
                     placeholder="Type a verb...",
                     id="verb_input"
                 )
+
+                yield Static("", id="input_feedback")
 
                 yield ResultsTable(id="results")
 
@@ -131,26 +132,19 @@ class Mlconjug3TUI(App):
         bar = self.query_one("#status_bar", Static)
         bar.update(self._status_bar_text())
 
-    # ---------------- EXPLORER ----------------
-    def on_verb_selected(self, message: VerbSelected):
-        verb = message.verb
+    # ---------------- VALIDATION (NEW) ----------------
+    def _is_valid(self, verb: str) -> bool:
+        try:
+            return self.service.conjugator.conjug_manager.is_valid_verb(verb)
+        except Exception:
+            return False
 
-        self.state.add_history(verb)
-        self._refresh_status_bar()
-
-        result = self.service.conjugate(verb)
-        if not result:
-            return
-
-        table = self.query_one("#explorer_results", ResultsTable)
-        table.update_conjugation(verb, result.conjug_info)
-
-    # ---------------- LIVE ----------------
+    # ---------------- LIVE INPUT ----------------
     def on_input_changed(self, event: Input.Changed):
         if event.input.id != "verb_input":
             return
 
-        verb = event.value.strip()
+        verb = event.value.strip().lower()
 
         if self._timer:
             self._timer.stop()
@@ -164,21 +158,53 @@ class Mlconjug3TUI(App):
         if not verb:
             return
 
+        feedback = self.query_one("#input_feedback", Static)
+        table = self.query_one("#results", ResultsTable)
+
+        # -------------------------
+        # VALIDATION GATE (FIX)
+        # -------------------------
+        if not self._is_valid(verb):
+            feedback.update(f"[⚠ Invalid verb: '{verb}']")
+            table.update("")  # clear output
+            return
+
+        feedback.update("")
+
         def compute(_):
             return self.service.conjugate(verb)
 
         result = self.cache.get(verb, compute)
 
-        table = self.query_one("#results", ResultsTable)
-
         if result:
             self.state.add_history(verb)
             self._refresh_status_bar()
 
+            self._last_valid = verb
+
             table.update_conjugation(
                 verb,
-                result.conjug_info
+                result.conjug_info,
+                mode="ML" if getattr(result, "predicted", False) else "RULE",
+                confidence=getattr(result, "confidence_score", None),
             )
+
+    # ---------------- EXPLORER ----------------
+    def on_verb_selected(self, message: VerbSelected):
+        verb = message.verb
+
+        self.state.add_history(verb)
+        self._refresh_status_bar()
+
+        if not self._is_valid(verb):
+            return
+
+        result = self.service.conjugate(verb)
+        if not result:
+            return
+
+        table = self.query_one("#explorer_results", ResultsTable)
+        table.update_conjugation(verb, result.conjug_info)
 
     # ---------------- BATCH ----------------
     def on_button_pressed(self, event: Button.Pressed):
@@ -186,17 +212,21 @@ class Mlconjug3TUI(App):
             return
 
         input_widget = self.query_one("#batch_input", Input)
+        results_table = self.query_one("#batch_results", ResultsTable)
 
         verbs = [
-            v.strip()
+            v.strip().lower()
             for v in input_widget.value.replace(",", " ").split()
             if v.strip()
         ]
 
-        results_table = self.query_one("#batch_results", ResultsTable)
-
         for verb in verbs:
+
+            if not self._is_valid(verb):
+                continue
+
             result = self.service.conjugate(verb)
+
             if result:
                 results_table.update_conjugation(
                     verb,
@@ -210,13 +240,11 @@ class Mlconjug3TUI(App):
             self.service.set_language(event.value)
             self.state.language = event.value
             self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
-
             self._refresh_status_bar()
 
         elif event.select.id == "subject_select":
             self.service.subject = event.value
             self.state.subject = event.value
-
             self._refresh_status_bar()
 
 
