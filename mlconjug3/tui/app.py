@@ -7,6 +7,7 @@ Improved TUI:
 - State integration
 - Cleaner explorer UX
 - INPUT VALIDATION FIX (IMPORTANT)
+- MARKUP SAFETY FIX (CRITICAL)
 """
 
 from textual.app import App, ComposeResult
@@ -58,7 +59,8 @@ class Mlconjug3TUI(App):
                     id="verb_input"
                 )
 
-                yield Static("", id="input_feedback")
+                # FIX: disable markup parsing at widget level
+                yield Static("", id="input_feedback", markup=False)
 
                 yield ResultsTable(id="results")
 
@@ -132,7 +134,7 @@ class Mlconjug3TUI(App):
         bar = self.query_one("#status_bar", Static)
         bar.update(self._status_bar_text())
 
-    # ---------------- VALIDATION (NEW) ----------------
+    # ---------------- VALIDATION ----------------
     def _is_valid(self, verb: str) -> bool:
         try:
             return self.service.conjugator.conjug_manager.is_valid_verb(verb)
@@ -162,11 +164,12 @@ class Mlconjug3TUI(App):
         table = self.query_one("#results", ResultsTable)
 
         # -------------------------
-        # VALIDATION GATE (FIX)
+        # VALIDATION GATE
         # -------------------------
         if not self._is_valid(verb):
-            feedback.update(f"[⚠ Invalid verb: '{verb}']")
-            table.update("")  # clear output
+            # FIX: NO markup kw allowed here
+            feedback.update(f"⚠ Invalid verb: {verb}")
+            table.update("")
             return
 
         feedback.update("")
