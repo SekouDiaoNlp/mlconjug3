@@ -4,7 +4,7 @@ results_table.py
 Improved renderer with:
 - RULE vs ML detection
 - Confidence display
-- Cleaner UX badges
+- Clean verb form normalization (FIX for prefix bug)
 """
 
 from rich.table import Table
@@ -24,19 +24,34 @@ class ResultsTable(Static):
         self._tables = []
 
     # -----------------------------
-    # BADGE SYSTEM (NEW UX CORE)
+    # BADGE SYSTEM
     # -----------------------------
     def _build_badge(self, mode: str, confidence: float = None) -> str:
-        """
-        Returns a clean status badge for the conjugation source.
-        """
-
         if mode == "ML":
             if confidence is not None:
-                return f"🤖 ML ({confidence:.2f})"
-            return "🤖 ML"
+                return f"🧠 ML ({confidence:.2f})"
+            return "🧠 ML"
+        return "📘 RULE"
 
-        return "✓ RULE"
+    # -----------------------------
+    # FIX: FORM NORMALIZATION
+    # -----------------------------
+    def _normalize_form(self, verb: str, form: str) -> str:
+        """
+        Prevents duplicated infinitive prefixes caused by mixed backend behavior.
+        """
+        if not form:
+            return form
+
+        # If form already contains verb twice at start, fix it
+        if form.startswith(verb + verb):
+            return form[len(verb):]
+
+        # If form redundantly repeats root pattern (common ML edge case)
+        if len(verb) > 3 and form.startswith(verb[:3] * 2):
+            return form[len(verb[:3]):]
+
+        return form
 
     # -----------------------------
     # MAIN RENDER METHOD
@@ -49,26 +64,10 @@ class ResultsTable(Static):
         confidence: float = None,
         mode: str = "RULE",
     ):
-        """
-        Render conjugation safely.
-
-        Parameters
-        ----------
-        verb : str
-        conjugation : dict
-        append : bool
-        confidence : float (optional ML confidence)
-        mode : str ("RULE" | "ML")
-        """
-
         badge = self._build_badge(mode, confidence)
-
         title = f"Conjugation of '{verb}'   [{badge}]"
 
-        table = Table(
-            title=title,
-            show_header=True,
-        )
+        table = Table(title=title, show_header=True)
 
         table.add_column("Mood")
         table.add_column("Tense")
@@ -80,15 +79,14 @@ class ResultsTable(Static):
 
                 if isinstance(persons, dict):
                     for person, form in persons.items():
-                        table.add_row(mood, tense, str(person), form)
+                        clean_form = self._normalize_form(verb, form)
+                        table.add_row(mood, tense, str(person), clean_form)
                 else:
-                    table.add_row(mood, tense, "", persons)
+                    clean_form = self._normalize_form(verb, persons)
+                    table.add_row(mood, tense, "", clean_form)
 
                 table.add_section()
 
-        # -------------------------
-        # RENDER MODE
-        # -------------------------
         if append:
             self._tables.append(table)
             self.update(Group(*self._tables))

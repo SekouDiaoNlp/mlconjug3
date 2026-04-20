@@ -213,21 +213,52 @@ class Verb(metaclass=VerbMeta):
         return [item for item in self]
 
     def _load_conjug(self, subject="abbrev"):
+        """
+        FIX: prevent double-root concatenation in ML/Verbiste hybrid data.
+        Ensures root is only applied to NON-prefixed forms.
+        """
+
         for mood, tense in self.conjug_info.items():
             for tense_name, persons in tense.items():
 
                 if persons is None:
                     continue
 
+                # -------------------------
+                # CASE 1: list format (Verbiste raw)
+                # -------------------------
                 if isinstance(persons, list):
                     persons_dict = OrderedDict()
+
                     for pers, term in persons:
                         key = ABBREVS[pers] if len(persons) == 6 else ""
-                        if term is not None:
-                            self.conjugate_person(key, persons_dict, term)
-                        else:
+
+                        if term is None:
                             persons_dict[key] = None
+                            continue
+
+                        # FIX: avoid double root
+                        if term.startswith(self.verb_info.root):
+                            clean_term = term[len(self.verb_info.root):]
+                        else:
+                            clean_term = term
+
+                        self.conjugate_person(key, persons_dict, clean_term)
+
                     self.conjug_info[mood][tense_name] = persons_dict
+
+                # -------------------------
+                # CASE 2: string format (infinitive / ML)
+                # -------------------------
+                elif isinstance(persons, str):
+
+                    # FIX: prevent root duplication
+                    if persons.startswith(self.verb_info.root):
+                        self.conjug_info[mood][tense_name] = persons
+                    else:
+                        self.conjug_info[mood][tense_name] = (
+                            self.verb_info.root + persons
+                        )
 
                 elif isinstance(persons, str):
                     self.conjug_info[mood][tense_name] = self.verb_info.root + persons
