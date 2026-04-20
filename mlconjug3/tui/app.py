@@ -1,13 +1,7 @@
 """
 app.py
 
-Improved TUI:
-- Global status bar
-- Verb history tracking
-- State integration
-- Cleaner explorer UX
-- INPUT VALIDATION FIX (IMPORTANT)
-- MARKUP SAFETY FIX (CRITICAL)
+Improved TUI (UX + Interaction upgrades)
 """
 
 from textual.app import App, ComposeResult
@@ -22,9 +16,6 @@ from mlconjug3.tui.state import TUIState
 
 
 class Mlconjug3TUI(App):
-    """
-    Main TUI application.
-    """
 
     CSS_PATH = "theme.css"
     DEBOUNCE_DELAY = 0.25
@@ -45,7 +36,6 @@ class Mlconjug3TUI(App):
     def compose(self) -> ComposeResult:
 
         yield Header()
-
         yield Static(self._status_bar_text(), id="status_bar")
 
         with TabbedContent():
@@ -59,7 +49,6 @@ class Mlconjug3TUI(App):
                     id="verb_input"
                 )
 
-                # FIX: disable markup parsing at widget level
                 yield Static("", id="input_feedback", markup=False)
 
                 yield ResultsTable(id="results")
@@ -69,11 +58,11 @@ class Mlconjug3TUI(App):
 
                 with Horizontal():
 
-                    with Vertical(classes="panel"):
+                    with Vertical(classes="panel left-panel"):
                         yield Static("Verb Explorer", classes="title")
                         yield VerbBrowser(self.verbs)
 
-                    with Vertical(classes="panel"):
+                    with Vertical(classes="panel right-panel"):
                         yield Static("Verb Details", classes="title")
 
                         with VerticalScroll(id="explorer_scroll"):
@@ -131,8 +120,7 @@ class Mlconjug3TUI(App):
         )
 
     def _refresh_status_bar(self):
-        bar = self.query_one("#status_bar", Static)
-        bar.update(self._status_bar_text())
+        self.query_one("#status_bar", Static).update(self._status_bar_text())
 
     # ---------------- VALIDATION ----------------
     def _is_valid(self, verb: str) -> bool:
@@ -158,32 +146,24 @@ class Mlconjug3TUI(App):
 
     def _update_verb(self, verb: str):
         if not verb:
+            self.query_one("#results", ResultsTable).clear()
             return
 
         feedback = self.query_one("#input_feedback", Static)
         table = self.query_one("#results", ResultsTable)
 
-        # -------------------------
-        # VALIDATION GATE
-        # -------------------------
         if not self._is_valid(verb):
-            # FIX: NO markup kw allowed here
-            feedback.update(f"⚠ Invalid verb: {verb}")
-            table.update("")
+            feedback.update(f"Invalid verb: {verb}")
+            table.clear()
             return
 
         feedback.update("")
 
-        def compute(_):
-            return self.service.conjugate(verb)
-
-        result = self.cache.get(verb, compute)
+        result = self.cache.get(verb, lambda _: self.service.conjugate(verb))
 
         if result:
             self.state.add_history(verb)
             self._refresh_status_bar()
-
-            self._last_valid = verb
 
             table.update_conjugation(
                 verb,
@@ -206,16 +186,24 @@ class Mlconjug3TUI(App):
         if not result:
             return
 
-        table = self.query_one("#explorer_results", ResultsTable)
-        table.update_conjugation(verb, result.conjug_info)
+        self.query_one("#explorer_results", ResultsTable).update_conjugation(
+            verb, result.conjug_info
+        )
 
     # ---------------- BATCH ----------------
-    def on_button_pressed(self, event: Button.Pressed):
-        if event.button.id != "run_batch":
-            return
+    def on_input_submitted(self, event: Input.Submitted):
+        if event.input.id == "batch_input":
+            self._run_batch()
 
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "run_batch":
+            self._run_batch()
+
+    def _run_batch(self):
         input_widget = self.query_one("#batch_input", Input)
         results_table = self.query_one("#batch_results", ResultsTable)
+
+        results_table.clear()
 
         verbs = [
             v.strip().lower()
@@ -224,7 +212,6 @@ class Mlconjug3TUI(App):
         ]
 
         for verb in verbs:
-
             if not self._is_valid(verb):
                 continue
 

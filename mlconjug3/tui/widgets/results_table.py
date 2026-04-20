@@ -1,7 +1,7 @@
 """
 results_table.py
 
-Tree-based conjugation explorer (FIXED VERSION)
+Tree-based conjugation explorer (IMPROVED VERSION)
 """
 
 from textual.widgets import Tree, Static
@@ -11,26 +11,27 @@ from textual.app import ComposeResult
 class ResultsTable(Static):
     """
     Tree-based conjugation explorer.
-
-    Structure:
-        Verb
-         ├── Mood
-         │    ├── Tense
-         │    │    ├── Person → Form
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # IMPORTANT FIX: do NOT use "tree"
-        self._tree = Tree("No verb loaded")
+        # FIX: empty root label (no "No verb loaded")
+        self._tree = Tree("")
         self._tree.show_root = True
 
     def compose(self) -> ComposeResult:
         yield self._tree
 
-    # -----------------------------
-    # BADGE SYSTEM
+    def clear(self):
+        """
+        Clear the tree safely.
+        """
+        self._tree.root.label = ""
+        for child in list(self._tree.root.children):
+            child.remove()
+        self._tree.refresh()
+
     # -----------------------------
     def _build_badge(self, mode: str, confidence: float = None) -> str:
         if mode == "ML":
@@ -39,9 +40,6 @@ class ResultsTable(Static):
             return "ML"
         return "RULE"
 
-    # -----------------------------
-    # NORMALIZATION
-    # -----------------------------
     def _normalize_form(self, verb: str, form: str) -> str:
         if not form:
             return form
@@ -55,8 +53,6 @@ class ResultsTable(Static):
         return form
 
     # -----------------------------
-    # MAIN RENDER
-    # -----------------------------
     def update_conjugation(
         self,
         verb: str,
@@ -66,12 +62,11 @@ class ResultsTable(Static):
         mode: str = "RULE",
     ):
         badge = self._build_badge(mode, confidence)
-
         tree = self._tree
 
         # Reset root
         tree.root.label = f"{verb}  [{badge}]"
-        # Properly clear existing nodes (Textual-safe)
+
         for child in list(tree.root.children):
             child.remove()
 
@@ -84,10 +79,12 @@ class ResultsTable(Static):
                 if isinstance(persons, dict):
                     for person, form in persons.items():
                         clean_form = self._normalize_form(verb, form)
-                        tense_node.add(f"{person} → {clean_form}")
+
+                        # LEAF NODE → no expand arrow
+                        node = tense_node.add_leaf(f"{person} → {clean_form}")
 
                 else:
                     clean_form = self._normalize_form(verb, persons)
-                    tense_node.add(clean_form)
+                    tense_node.add_leaf(clean_form)
 
         tree.refresh()
