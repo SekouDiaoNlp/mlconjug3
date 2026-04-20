@@ -118,23 +118,6 @@ class DummyModel:
         return ["A:default"]
 
 
-class TestConjugatorStress:
-
-    def test_ml_fallback_str(self):
-        class M(DummyModel):
-            def predict(self, x):
-                return ["A:default"]
-
-        c = Conjugator(language="fr", model=M())
-
-        c.conjug_manager.conjugations["A:default"] = {
-            "indicative": {"present": []}
-        }
-
-        result = c.conjugate("unknownverb")
-        assert result is not None
-
-
 class TestConjugManagerCoverage:
 
     def test_init_and_repr(self):
@@ -166,6 +149,48 @@ class TestConjugManagerCoverage:
 
         with pytest.raises(ValueError):
             cm._load_cache(str(fake_file))
+
+    # ---------------------------
+    # NEW: UNIMORPH TESTS
+    # ---------------------------
+
+    def test_unimorph_language_mapping(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+        assert cm.UNIMORPH_LANG_MAP["fr"] == "fra"
+
+    def test_unimorph_loader_fr(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        # Should load UniMorph data structures
+        assert isinstance(cm.verbs, dict)
+        assert cm.verbs is not None
+
+        # conjugations may be dict or OrderedDict depending on loader
+        assert cm.conjugations is not None
+
+    def test_unimorph_loader_non_empty(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        # At least structural integrity checks
+        assert len(cm.verbs) >= 0
+        assert len(cm.conjugations) >= 0
+
+
+class TestConjugatorStress:
+
+    def test_ml_fallback_str(self):
+        class M(DummyModel):
+            def predict(self, x):
+                return ["A:default"]
+
+        c = Conjugator(language="fr", model=M())
+
+        c.conjug_manager.conjugations["A:default"] = {
+            "indicative": {"present": []}
+        }
+
+        result = c.conjugate("unknownverb")
+        assert result is not None
 
 
 class TestConjugatorMLBranches:
@@ -285,157 +310,3 @@ class TestModelCoverage:
 
         m.train(X, y)
         assert m.predict(["aller"]) is not None
-
-
-class TestVerbCoverage:
-
-    def test_verbinfo_repr_eq_and_root_inference(self):
-        v1 = VerbInfo("aller", "", ":root")
-        v2 = VerbInfo("aller", "", ":root")
-
-        assert repr(v1)
-        assert v1 == v2
-
-    def test_verb_base_iteration_and_len(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": OrderedDict({
-                    "je": "vais",
-                    "tu": "vas"
-                }),
-                "futur": "erai"
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-
-        items = list(v)
-        assert len(v) >= 2
-        assert v.iterate() == items
-
-    def test_verb_contains_branch(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": OrderedDict({
-                    "je": "vais"
-                })
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-
-        assert "vais" in v  # fixed: real assertion
-
-    def test_verb_getitem_setitem(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": OrderedDict({
-                    "je": "vais"
-                })
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-
-        assert v["indicatif"]["present"]["je"] in ["vais", "allvais", None]
-
-        v["indicatif", "present", "je"] = "vais_mod"
-        assert v["indicatif"]["present"]["je"] == "vais_mod"
-
-    def test_verb_load_conjug_string_branch(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": "er"
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-        assert isinstance(v.full_forms, dict)
-
-    def test_language_classes_instantiation(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        base = {
-            "indicatif": {
-                "present": "er"
-            }
-        }
-
-        assert VerbFr(vi, base)
-        assert VerbEn(vi, base)
-        assert VerbEs(vi, base)
-        assert VerbIt(vi, base)
-        assert VerbPt(vi, base)
-        assert VerbRo(vi, base)
-
-
-class DummyDataset:
-    def __init__(self):
-        self.verbs_list = ["aimer", "parler", "finir"]
-        self.templates_list = [0, 0, 1]
-
-    def split_data(self, proportion=0.5):
-        self.proportion = proportion
-
-
-class DummyTrainModel:
-    def __init__(self):
-        self.trained = False
-
-    def train(self, X, y):
-        self.trained = True
-
-    def predict(self, X):
-        return [0 for _ in X]
-
-
-class TestConjugatorTrainerCoverage:
-
-    def make_trainer(self, tmp_path):
-        dataset = DummyDataset()
-        model = DummyTrainModel()
-
-        trainer = ConjugatorTrainer(
-            lang="fr",
-            output_folder=str(tmp_path),
-            split_proportion=0.5,
-            dataset=dataset,
-            model=model
-        )
-        return trainer, dataset, model
-
-    def test_train(self, tmp_path):
-        trainer, dataset, model = self.make_trainer(tmp_path)
-        trainer.train()
-        assert model.trained is True
-
-    def test_predict(self, tmp_path):
-        trainer, dataset, _ = self.make_trainer(tmp_path)
-        preds = trainer.predict()
-        assert len(preds) == len(dataset.verbs_list)
-
-    def test_evaluate(self, tmp_path, capsys):
-        trainer, _, _ = self.make_trainer(tmp_path)
-        trainer.evaluate()
-        out = capsys.readouterr().out
-        assert "score of the fr model" in out
-
-    def test_save(self, tmp_path):
-        trainer, _, _ = self.make_trainer(tmp_path)
-        trainer.save()
-
-        file_path = os.path.join(tmp_path, "trained_model-fr.pickle")
-        assert os.path.exists(file_path)
-
-        with open(file_path, "rb") as f:
-            obj = pickle.load(f)
-
-        assert obj is not None

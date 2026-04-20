@@ -104,8 +104,8 @@ class ConjugManager:
             "conjugation_data"
         )
 
-        verbs_path = os.path.join(base_path, f"verbs_{lang3}.json")
-        conj_path = os.path.join(base_path, f"conjugations_{lang3}.json")
+        verbs_path = os.path.join(base_path, f"verbs-{lang3}.json")
+        conj_path = os.path.join(base_path, f"conjugations-{lang3}.json")
 
         with open(verbs_path, encoding="utf-8") as f:
             self.verbs = json.load(f)
