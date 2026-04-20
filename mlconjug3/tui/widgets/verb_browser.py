@@ -34,7 +34,6 @@ class VerbBrowser(Vertical):
         self.list_view.clear()
 
         for verb in verbs[: self.max_results]:
-            # Store verb directly on the item (important fix)
             item = ListItem(Label(verb))
             item.verb = verb
             self.list_view.append(item)
@@ -52,12 +51,11 @@ class VerbBrowser(Vertical):
         self._update_list(filtered)
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
-        # Robust retrieval (no Label internals)
         item = event.item
 
         verb = getattr(item, "verb", None)
         if verb is None:
             label = item.query_one(Label)
-            verb = str(label.renderable) if hasattr(label, "renderable") else label.plain
+            verb = getattr(label, "renderable", str(label))
 
         self.post_message(VerbSelected(verb))

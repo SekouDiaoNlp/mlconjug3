@@ -1,12 +1,7 @@
 """
 results_table.py
 
-Fixed batch-safe renderer for mlconjug3 TUI.
-
-Fixes:
-- no string concatenation of Rich objects
-- proper multi-table rendering
-- stable batch accumulation
+Improved renderer with optional ML metadata support.
 """
 
 from rich.table import Table
@@ -18,14 +13,21 @@ class ResultsTable(Static):
     """
     Displays conjugation results safely for:
     - single verb mode
-    - batch mode (multi-table view)
+    - batch mode
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tables = []
 
-    def update_conjugation(self, verb: str, conjugation: dict, append: bool = False):
+    def update_conjugation(
+        self,
+        verb: str,
+        conjugation: dict,
+        append: bool = False,
+        confidence: float = None,
+        mode: str = "RULE",
+    ):
         """
         Render conjugation safely.
 
@@ -34,10 +36,22 @@ class ResultsTable(Static):
         verb : str
         conjugation : dict
         append : bool
+        confidence : float (optional ML confidence)
+        mode : str ("RULE" | "ML")
         """
 
+        title = f"Conjugation of '{verb}'"
+
+        # -------------------------
+        # ML / RULE BADGE
+        # -------------------------
+        if mode == "ML" and confidence is not None:
+            title += f"  ⚠ ML ({confidence})"
+        else:
+            title += "  ✓ RULE"
+
         table = Table(
-            title=f"Conjugation of '{verb}'",
+            title=title,
             show_header=True,
         )
 
@@ -57,12 +71,14 @@ class ResultsTable(Static):
 
                 table.add_section()
 
-        # ---------------------------
-        # SINGLE vs BATCH MODE
-        # ---------------------------
+        # -------------------------
+        # RENDER MODE
+        # -------------------------
         if append:
             self._tables.append(table)
             self.update(Group(*self._tables))
         else:
             self._tables = [table]
             self.update(table)
+
+

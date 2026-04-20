@@ -2,20 +2,32 @@
 state.py
 
 Global state container for the mlconjug3 TUI application.
-
-This module stores UI-level state such as selected language,
-subject format, and cached conjugation results.
 """
+
+from collections import deque
 
 
 class TUIState:
     """
     Shared application state for the TUI.
-
-    This is intentionally lightweight and framework-agnostic.
     """
 
     def __init__(self):
         self.language: str = "fr"
         self.subject: str = "abbrev"
-        self.cache = {}
+
+        # -------------------------
+        # UX ENHANCEMENTS
+        # -------------------------
+        self.history = deque(maxlen=50)   # recent verbs
+        self.favorites = set()
+
+    def add_history(self, verb: str):
+        if verb:
+            self.history.appendleft(verb)
+
+    def toggle_favorite(self, verb: str):
+        if verb in self.favorites:
+            self.favorites.remove(verb)
+        else:
+            self.favorites.add(verb)

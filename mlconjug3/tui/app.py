@@ -1,12 +1,11 @@
 """
 app.py
 
-Working Textual TUI for mlconjug3.
-
-Fixes:
-- Explorer selection now updates UI
-- Explorer results panel is scrollable
-- Improved layout stability
+Improved TUI:
+- Global status bar
+- Verb history tracking
+- State integration
+- Cleaner explorer UX
 """
 
 from textual.app import App, ComposeResult
@@ -17,6 +16,7 @@ from mlconjug3.core.conjugation_service import ConjugationService
 from mlconjug3.tui.cache import ConjugationCache
 from mlconjug3.tui.widgets.results_table import ResultsTable
 from mlconjug3.tui.widgets.verb_browser import VerbBrowser, VerbSelected
+from mlconjug3.tui.state import TUIState
 
 
 class Mlconjug3TUI(App):
@@ -30,6 +30,7 @@ class Mlconjug3TUI(App):
     def __init__(self):
         super().__init__()
 
+        self.state = TUIState()
         self.service = ConjugationService(language="fr")
         self.cache = ConjugationCache()
 
@@ -38,7 +39,14 @@ class Mlconjug3TUI(App):
 
     # ---------------- UI ----------------
     def compose(self) -> ComposeResult:
+
         yield Header()
+
+        # ---------------- STATUS BAR ----------------
+        yield Static(
+            self._status_bar_text(),
+            id="status_bar"
+        )
 
         with TabbedContent():
 
@@ -58,16 +66,13 @@ class Mlconjug3TUI(App):
 
                 with Horizontal():
 
-                    # LEFT: browser
                     with Vertical(classes="panel"):
                         yield Static("Verb Explorer", classes="title")
                         yield VerbBrowser(self.verbs)
 
-                    # RIGHT: scrollable results panel
                     with Vertical(classes="panel"):
                         yield Static("Verb Details", classes="title")
 
-                        # 🔥 SCROLL CONTAINER ADDED
                         with VerticalScroll(id="explorer_scroll"):
                             yield ResultsTable(id="explorer_results")
 
@@ -85,6 +90,7 @@ class Mlconjug3TUI(App):
 
             # ---------------- SETTINGS ----------------
             with TabPane("Settings"):
+
                 yield Static("Language")
 
                 yield Select(
@@ -113,18 +119,33 @@ class Mlconjug3TUI(App):
 
         yield Footer()
 
-    # ---------------- EXPLORER SELECTION ----------------
+    # ---------------- STATUS BAR ----------------
+    def _status_bar_text(self) -> str:
+        return (
+            f"LANG: {self.state.language.upper()} | "
+            f"MODE: {self.state.subject.upper()} | "
+            f"HISTORY: {len(self.state.history)}"
+        )
+
+    def _refresh_status_bar(self):
+        bar = self.query_one("#status_bar", Static)
+        bar.update(self._status_bar_text())
+
+    # ---------------- EXPLORER ----------------
     def on_verb_selected(self, message: VerbSelected):
         verb = message.verb
-        result = self.service.conjugate(verb)
 
+        self.state.add_history(verb)
+        self._refresh_status_bar()
+
+        result = self.service.conjugate(verb)
         if not result:
             return
 
         table = self.query_one("#explorer_results", ResultsTable)
         table.update_conjugation(verb, result.conjug_info)
 
-    # ---------------- LIVE CONJUGATION ----------------
+    # ---------------- LIVE ----------------
     def on_input_changed(self, event: Input.Changed):
         if event.input.id != "verb_input":
             return
@@ -149,10 +170,17 @@ class Mlconjug3TUI(App):
         result = self.cache.get(verb, compute)
 
         table = self.query_one("#results", ResultsTable)
-        if result:
-            table.update_conjugation(verb, result.conjug_info)
 
-    # ---------------- BATCH MODE ----------------
+        if result:
+            self.state.add_history(verb)
+            self._refresh_status_bar()
+
+            table.update_conjugation(
+                verb,
+                result.conjug_info
+            )
+
+    # ---------------- BATCH ----------------
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.id != "run_batch":
             return
@@ -180,10 +208,16 @@ class Mlconjug3TUI(App):
     def on_select_changed(self, event: Select.Changed):
         if event.select.id == "lang_select":
             self.service.set_language(event.value)
+            self.state.language = event.value
             self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
+
+            self._refresh_status_bar()
 
         elif event.select.id == "subject_select":
             self.service.subject = event.value
+            self.state.subject = event.value
+
+            self._refresh_status_bar()
 
 
 def main():
