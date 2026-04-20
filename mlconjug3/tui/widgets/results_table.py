@@ -1,7 +1,7 @@
 """
 results_table.py
 
-Tree-based conjugation explorer (IMPROVED + FIXED BATCH SUPPORT)
+Tree-based conjugation explorer (ROBUST + CRASH-SAFE VERSION)
 """
 
 from textual.widgets import Tree, Static
@@ -11,7 +11,11 @@ from textual.app import ComposeResult
 class ResultsTable(Static):
     """
     Tree-based conjugation explorer.
-    Now supports multi-verb batch mode correctly.
+
+    FIXES:
+    - Prevents NoneType crashes in Textual Tree
+    - Safe rendering for ML + rule-based conjugation outputs
+    - Handles missing / incomplete linguistic data gracefully
     """
 
     def __init__(self, *args, **kwargs):
@@ -20,15 +24,31 @@ class ResultsTable(Static):
         self._tree = Tree("")
         self._tree.show_root = True
 
-        # 🔥 FIX: batch-aware storage
         self._batch_mode = False
         self._batch_roots = {}
 
     def compose(self) -> ComposeResult:
         yield self._tree
 
+    # -----------------------------
+    # SAFE HELPERS
+    # -----------------------------
+    def _safe_form(self, value):
+        """
+        Ensures Tree never receives None or invalid values.
+        """
+        if value is None:
+            return "—"
+
+        if isinstance(value, str):
+            value = value.strip()
+            return value if value else "—"
+
+        return str(value)
+
     def clear(self):
         self._tree.root.label = ""
+
         for child in list(self._tree.root.children):
             child.remove()
 
@@ -43,8 +63,13 @@ class ResultsTable(Static):
             return "ML"
         return "RULE"
 
-    def _normalize_form(self, verb: str, form: str) -> str:
-        if not form:
+    def _normalize_form(self, verb: str, form: str):
+        """
+        Keeps original logic but ensures safe output.
+        """
+        form = self._safe_form(form)
+
+        if form == "—":
             return form
 
         if form.startswith(verb + verb):
@@ -65,23 +90,20 @@ class ResultsTable(Static):
         mode: str = "RULE",
     ):
         """
-        FIXED:
-        - append=True now preserves previous verbs (batch mode)
+        SAFE TREE RENDERING:
+        - Never allows None into Textual Tree nodes
+        - Prevents crash when ML returns incomplete conjugations
         """
 
-        badge = self._build_badge(
-            mode if mode in ("ML", "RULE") else "RULE",
-            confidence
-        )
+        badge = self._build_badge(mode, confidence)
         tree = self._tree
 
         # -------------------------
-        # BATCH MODE ENABLED
+        # BATCH MODE
         # -------------------------
         if append:
             self._batch_mode = True
 
-            # create or reuse root node per verb
             if verb in self._batch_roots:
                 verb_node = self._batch_roots[verb]
                 verb_node.children.clear()
@@ -90,31 +112,38 @@ class ResultsTable(Static):
                 self._batch_roots[verb] = verb_node
 
         else:
-            # normal mode → reset everything
             self._batch_mode = False
             self._batch_roots.clear()
 
             tree.root.label = f"{verb}  [{badge}]"
+
             for child in list(tree.root.children):
                 child.remove()
 
             verb_node = tree.root
 
         # -------------------------
-        # BUILD TREE
+        # TREE BUILDING (SAFE)
         # -------------------------
-        for mood, tenses in conjugation.items():
-            mood_node = verb_node.add(mood.capitalize(), expand=False)
+        for mood, tenses in (conjugation or {}).items():
+            mood_node = verb_node.add(str(mood).capitalize(), expand=False)
 
-            for tense, persons in tenses.items():
-                tense_node = mood_node.add(tense.capitalize(), expand=False)
+            for tense, persons in (tenses or {}).items():
+                tense_node = mood_node.add(str(tense).capitalize(), expand=False)
 
+                # CASE: dict (standard)
                 if isinstance(persons, dict):
                     for person, form in persons.items():
                         clean_form = self._normalize_form(verb, form)
+                        clean_form = self._safe_form(clean_form)
+
                         tense_node.add_leaf(f"{person} ? {clean_form}")
+
+                # CASE: string or fallback
                 else:
                     clean_form = self._normalize_form(verb, persons)
+                    clean_form = self._safe_form(clean_form)
+
                     tense_node.add_leaf(clean_form)
 
         tree.refresh()
