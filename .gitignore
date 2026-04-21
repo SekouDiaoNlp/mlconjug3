@@ -85,3 +85,11 @@ mlconjug3/data/conjug_manager/*.pkl
 /.pants.*
 /dist/
 /.pids
+
+
+# ollama/cline
+.clinerules
+.clineignore
+AGENTS.md
+Modelfile
+.env
