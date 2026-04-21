@@ -23,18 +23,22 @@ def analyze_errors(lang, y_true, y_pred, inputs, top_k=15):
     - Most frequent confusion pairs (true label → predicted label)
     - Example misclassified inputs grouped by error type
 
-    :param lang: Language code (e.g., 'fr', 'en', 'es').
-    :type lang: str
-    :param y_true: Ground-truth template labels.
-    :type y_true: sequence of int | sequence of str
-    :param y_pred: Predicted template labels.
-    :type y_pred: sequence of int | sequence of str
-    :param inputs: Input verb samples corresponding to predictions.
-    :type inputs: sequence of str
-    :param top_k: Number of top confusion pairs to display.
-    :type top_k: int
+    Parameters
+    ----------
+    lang : str
+        Language code (e.g., "fr", "en", "es").
+    y_true : sequence of int or sequence of str
+        Ground-truth template labels.
+    y_pred : sequence of int or sequence of str
+        Predicted template labels.
+    inputs : sequence of str
+        Input verb samples corresponding to predictions.
+    top_k : int, optional
+        Number of top confusion pairs to display, by default 15.
 
-    :return: None
+    Returns
+    -------
+    None
     """
 
     print("\n" + "=" * 30)

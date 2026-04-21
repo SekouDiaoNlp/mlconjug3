@@ -87,6 +87,7 @@ twine = ">=4,<6"
 bandit = ">=1.7,<2"
 furo = ">=2024.1,<2026"
 sphinx-rtd-theme = "^3.1.0"
+textual-dev = "^1.8.0"
 
 [tool.bandit]
 skips = ["B311"]
@@ -102,3 +103,13 @@ strict = true
 ignore_missing_imports = true
 show_error_codes = true
 files = "mlconjug3/"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I"]

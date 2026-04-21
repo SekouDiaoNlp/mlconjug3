@@ -24,6 +24,8 @@ import yaml
 
 from rich.table import Table
 from rich.console import Console
+from mlconjug3.core.application_service import ConjugationApplicationService
+from mlconjug3.core.options import EXPORT_FORMATS
 
 try:
     from .utils import _
@@ -100,14 +102,13 @@ def main(verbs, language, output, subject, file_format, config):
     Save output:
         mlconjug3 -l es -o output.json 'hablar'
     """
-    from .mlconjug import Conjugator
-
     config_options = load_config(config)
 
     language = config_options.get("language", language)
     subject = config_options.get("subject", subject)
     output = config_options.get("output", output)
     file_format = config_options.get("file_format", file_format)
+    backend = config_options.get("backend", "legacy")
     theme_settings = config_options.get("theme", {})
 
     try:
@@ -124,36 +125,12 @@ def main(verbs, language, output, subject, file_format, config):
         logger.addHandler(error_handler)
         logger.setLevel(logging.INFO)
 
-        conjugator = Conjugator(language)
-        conjugations = {}
-        missing = []
-
-        # -------------------------
-        # Single verb case
-        # -------------------------
-        if len(verbs) == 1:
-            result = conjugator.conjugate(verbs[0], subject)
-
-            if result:
-                conjugations[verbs[0]] = result.conjug_info
-            else:
-                missing.append(verbs[0])
-
-        # -------------------------
-        # Multiple verbs
-        # -------------------------
-        else:
-            results = conjugator.conjugate(verbs, subject)
-
-            conjugations = {
-                verb: verb_obj.conjug_info
-                for verb, verb_obj in zip(verbs, results)
-                if verb_obj
-            }
-
-            missing = [
-                verb for verb, result in zip(verbs, results) if not result
-            ]
+        app_service = ConjugationApplicationService(
+            language=language, subject=subject, backend=backend
+        )
+        normalized = app_service.conjugate_normalized(list(verbs))
+        conjugations = normalized.conjugations
+        missing = normalized.missing
 
         # -------------------------
         # Display results
@@ -215,7 +192,7 @@ def main(verbs, language, output, subject, file_format, config):
 
             else:
                 raise ValueError(
-                    "Invalid output format. Please choose 'json' or 'csv'."
+                    f"Invalid output format. Please choose one of {sorted(EXPORT_FORMATS)}."
                 )
 
     except Exception as e:

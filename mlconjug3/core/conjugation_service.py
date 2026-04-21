@@ -15,8 +15,12 @@ This separation ensures that the TUI does not directly depend on
 low-level conjugation logic or model management.
 """
 
-from typing import Union, List, Any
-from mlconjug3.mlconjug import Conjugator
+from mlconjug3.core.application_service import (
+    BackendName,
+    ConjugationApplicationService,
+    ConjugationResult,
+    VerbResult,
+)
 
 
 class ConjugationService:
@@ -41,7 +45,12 @@ class ConjugationService:
         Underlying conjugation engine instance.
     """
 
-    def __init__(self, language: str = "fr", subject: str = "abbrev") -> None:
+    def __init__(
+        self,
+        language: str = "fr",
+        subject: str = "abbrev",
+        backend: BackendName = "legacy",
+    ) -> None:
         """
         Initialize the conjugation service.
 
@@ -51,11 +60,17 @@ class ConjugationService:
             Language code for conjugation (default is "fr").
         subject : str, optional
             Subject formatting mode (default is "abbrev").
+        backend : str, optional
+            Backend identifier ("legacy" or "unimorph"), default is "legacy".
         """
 
+        self._app_service = ConjugationApplicationService(
+            language=language, subject=subject, backend=backend
+        )
         self.language: str = language
         self.subject: str = subject
-        self.conjugator: Conjugator = Conjugator(language)
+        self.backend: str = backend
+        self.conjugator = self._app_service.conjugator
 
     def set_language(self, language: str) -> None:
         """
@@ -68,7 +83,8 @@ class ConjugationService:
         """
 
         self.language = language
-        self.conjugator = Conjugator(language)
+        self._app_service.set_language(language)
+        self.conjugator = self._app_service.conjugator
 
     def set_subject(self, subject: str) -> None:
         """
@@ -81,20 +97,82 @@ class ConjugationService:
         """
 
         self.subject = subject
+        self._app_service.set_subject(subject)
 
-    def conjugate(self, verbs: Union[str, List[str]]) -> Any:
+    def set_backend(self, backend: BackendName) -> None:
+        """
+        Update the active backend and refresh the conjugator.
+
+        Parameters
+        ----------
+        backend : str
+            Backend identifier ("legacy" or "unimorph").
+
+        Raises
+        ------
+        ValueError
+            If `backend` is unsupported by the underlying conjugator.
+        """
+        self.backend = backend
+        self._app_service.set_backend(backend)
+        self.conjugator = self._app_service.conjugator
+
+    def conjugate(self, verbs: str | list[str]) -> VerbResult | list[VerbResult]:
         """
         Conjugate one or multiple verbs.
 
         Parameters
         ----------
-        verbs : str or list of str
+        verbs : str or list[str]
             Verb(s) to conjugate.
 
         Returns
         -------
-        Any
+        VerbResult or list[VerbResult]
             Conjugation result(s) from the underlying engine.
         """
 
-        return self.conjugator.conjugate(verbs, self.subject)
+        return self._app_service.conjugate(verbs)
+
+    def conjugate_normalized(self, verbs: str | list[str]) -> ConjugationResult:
+        """
+        Conjugate input verbs and return normalized results.
+
+        Parameters
+        ----------
+        verbs : str or list[str]
+            Verb(s) to conjugate.
+
+        Returns
+        -------
+        ConjugationResult
+            Normalized conjugation payload for interface layers.
+        """
+        return self._app_service.conjugate_normalized(verbs)
+
+    def is_valid_verb(self, verb: str) -> bool:
+        """
+        Validate whether a verb is accepted by the active language/backend.
+
+        Parameters
+        ----------
+        verb : str
+            Verb to validate.
+
+        Returns
+        -------
+        bool
+            True if valid, False otherwise.
+        """
+        return self._app_service.is_valid_verb(verb)
+
+    def list_verbs(self) -> list[str]:
+        """
+        List available verbs for the active language/backend.
+
+        Returns
+        -------
+        list of str
+            Known verbs exposed by the current conjugation manager.
+        """
+        return self._app_service.list_verbs()

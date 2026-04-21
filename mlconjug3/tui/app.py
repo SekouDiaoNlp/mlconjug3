@@ -33,6 +33,7 @@ from textual.widgets import (
 from textual.containers import Horizontal, Vertical, VerticalScroll
 
 from mlconjug3.core.conjugation_service import ConjugationService
+from mlconjug3.core.options import LANGUAGE_OPTIONS, SUBJECT_OPTIONS
 from mlconjug3.tui.cache import ConjugationCache
 from mlconjug3.tui.widgets.results_table import ResultsTable
 from mlconjug3.tui.widgets.verb_browser import VerbBrowser, VerbSelected
@@ -79,9 +80,7 @@ class Mlconjug3TUI(App):
         self._timer: Optional[Any] = None
         self._last_valid: Optional[str] = None
 
-        self.verbs: List[str] = list(
-            self.service.conjugator.conjug_manager.verbs.keys()
-        )
+        self.verbs: List[str] = self.service.list_verbs()
 
     # -------------------------
     # UI LAYOUT
@@ -141,14 +140,7 @@ class Mlconjug3TUI(App):
                 yield Static("Language")
 
                 yield Select(
-                    options=[
-                        ("French", "fr"),
-                        ("English", "en"),
-                        ("Spanish", "es"),
-                        ("Italian", "it"),
-                        ("Portuguese", "pt"),
-                        ("Romanian", "ro"),
-                    ],
+                    options=LANGUAGE_OPTIONS,
                     value="fr",
                     id="lang_select",
                 )
@@ -156,10 +148,7 @@ class Mlconjug3TUI(App):
                 yield Static("Subject format")
 
                 yield Select(
-                    options=[
-                        ("Abbrev", "abbrev"),
-                        ("Pronoun", "pronoun"),
-                    ],
+                    options=SUBJECT_OPTIONS,
                     value="abbrev",
                     id="subject_select",
                 )
@@ -208,7 +197,7 @@ class Mlconjug3TUI(App):
             True if valid, False otherwise.
         """
         try:
-            return self.service.conjugator.conjug_manager.is_valid_verb(verb)
+            return self.service.is_valid_verb(verb)
         except Exception:
             return False
 
@@ -377,7 +366,7 @@ class Mlconjug3TUI(App):
         if event.select.id == "lang_select":
             self.service.set_language(event.value)
             self.state.language = event.value
-            self.verbs = list(self.service.conjugator.conjug_manager.verbs.keys())
+            self.verbs = self.service.list_verbs()
             self._refresh_status_bar()
 
         elif event.select.id == "subject_select":

@@ -44,9 +44,43 @@ class Conjugator:
     - Machine learning fallback for unknown verbs
     """
 
-    def __init__(self, language="fr", model=None):
+    def __init__(self, language="fr", model=None, backend="legacy"):
+        """
+        Initialize a conjugator instance.
+
+        Parameters
+        ----------
+        language : str, optional
+            Language code used for conjugation, by default "fr".
+        model : Model or estimator, optional
+            Trained model used for ML fallback on unknown verbs. If None,
+            the pre-trained packaged model for `language` is loaded.
+        backend : str, optional
+            Data backend identifier. Supported values are:
+            - "legacy" : Verbiste XML/JSON resources
+            - "unimorph" : UniMorph JSON resources
+
+        Raises
+        ------
+        ValueError
+            If `backend` is not one of "legacy" or "unimorph".
+
+        Examples
+        --------
+        >>> Conjugator(language="fr")
+        >>> Conjugator(language="fr", backend="unimorph")
+        """
         self.language = language
-        self.conjug_manager = Verbiste(language=language)
+        self.backend = backend
+
+        if backend == "legacy":
+            self.conjug_manager = Verbiste(language=language)
+        elif backend == "unimorph":
+            self.conjug_manager = ConjugManager(language=language, use_unimorph=True)
+        else:
+            raise ValueError(
+                "Unsupported backend. Allowed values are 'legacy' or 'unimorph'."
+            )
 
         if model is None:
             resource_path = resources.files(RESOURCE_PACKAGE).joinpath(
@@ -190,6 +224,19 @@ class Conjugator:
         return verb_object
 
     def set_model(self, model):
+        """
+        Set the ML fallback model used for unknown verbs.
+
+        Parameters
+        ----------
+        model : Model
+            Trained `mlconjug3.models.Model` instance.
+
+        Raises
+        ------
+        ValueError
+            If `model` is not an instance of `Model`.
+        """
         if not isinstance(model, Model):
             logger.warning(
                 _("Please provide an instance of a mlconjug3.mlconjug3.Model")
