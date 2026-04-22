@@ -161,16 +161,19 @@ class Mlconjug3TUI(App):
 
             # ---------------- CONJUGATE ----------------
             with TabPane("Conjugate"):
-                yield Static("Live conjugation", classes="title")
+                yield Static("✨ Conjugate a verb", classes="title")
 
                 with Horizontal():
                     with Vertical(classes="panel left-panel"):
-                        yield Input(placeholder="Type a verb...", id="verb_input")
+                        yield Input(
+                            placeholder="🔍 Type a verb (e.g. aller, manger...)",
+                            id="verb_input"
+                        )
                         yield SuggestDropdown(id="verb_suggest")
                         yield Static("", id="input_feedback", markup=False)
                         with Horizontal():
-                            yield Button("Export JSON", id="export_json")
-                            yield Button("Export Text", id="export_text")
+                            yield Button("📤 Export JSON", id="export_json")
+                            yield Button("📄 Export Text", id="export_text")
                         yield ResultsTable(id="results")
                     with Vertical(classes="panel right-panel"):
                         yield ProfilePanel(id="profile")
@@ -220,7 +223,11 @@ class Mlconjug3TUI(App):
                 yield Static("Learning mode", classes="title")
                 yield Static("", id="learn_streak", markup=True)
                 yield Static(
-                    "Flow: Next verb → Reveal key forms → Quiz → Show answer → Mark ✅/❌",
+                    "🧠 Learn step-by-step:\n"
+                    "1. Pick a verb\n"
+                    "2. Reveal forms\n"
+                    "3. Quiz yourself\n"
+                    "4. Track progress!",
                     id="learn_help",
                     classes="muted",
                 )
@@ -271,37 +278,20 @@ class Mlconjug3TUI(App):
     # STATUS BAR
     # -------------------------
     def _status_bar_text(self) -> str:
-        """
-        Build the status bar text.
-
-        Returns
-        -------
-        str
-            Formatted status string.
-        """
         lang = self.state.language.upper()
         subject = self.state.subject.upper()
-        hist = len(self.state.history)
-        fav = len(self.state.favorites)
-        theme = "LIGHT" if self._theme_variant == "light" else "DARK"
-        density = "COMPACT" if self._density_variant == "compact" else "SPACIOUS"
-        verb = (self._current_verb or "").strip()
-        tpl = self._current_template
-        root = self._current_root
-        out = (
-            f"[b]🌍[/b] [#7aa2ff]{lang}[/]  "
-            f"[b]👤[/b] [#c0caf5]{subject}[/]  "
+
+        verb = self._current_verb or "—"
+
+        return (
+            f"🌍 {lang}   "
+            f"👤 {subject}   "
+            f"✨ {verb}   "
+            f"🕘 {len(self.state.history)}   "
+            f"⭐ {len(self.state.favorites)}   "
+            f"🎨 {self._theme_variant.upper()}   "
+            f"📏 {self._density_variant.upper()}"
         )
-        if verb:
-            out += f"[b]🏷[/b] [#9aa4b2]{(tpl or '?')}[/]  "
-            out += f"[b]🌱[/b] [#9aa4b2]{(root or '?')}[/]  "
-        out += (
-            f"[b]🕘[/b] [#9aa4b2]{hist}[/]  "
-            f"[b]⭐[/b] [#e0af68]{fav}[/]  "
-            f"[#9aa4b2]•[/] [b]🌓[/b] [#9aa4b2]{theme}[/]  "
-            f"[b]↕[/b] [#9aa4b2]{density}[/]"
-        )
-        return out
 
     def _refresh_status_bar(self) -> None:
         """
