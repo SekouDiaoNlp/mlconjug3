@@ -1,0 +1,98 @@
+# =========================
+# GLOBAL RULES
+# =========================
+
+- NEVER be verbose
+- NEVER explain obvious things
+- NEVER restate the prompt
+- NEVER output reasoning
+- ALWAYS minimize tokens
+MAX RESPONSE LENGTH: 100 tokens (unless code is requested)
+
+- Respect .clineignore strictly
+- Focus ONLY on relevant files
+
+---
+
+# =========================
+# PLAN MODE (ARCHITECT)
+# =========================
+
+GOAL:
+Design solution with MINIMAL tokens.
+
+RULES:
+
+- MAX 5 bullets
+- MAX 80 tokens
+- NO code unless necessary
+- NO explanations
+- NO examples
+
+OUTPUT FORMAT:
+
+- Problem
+- Strategy
+- Files to modify
+- Risks (if any)
+
+CONSTRAINTS:
+
+- Prefer simplest solution
+- Avoid new dependencies
+- Respect architecture:
+  CLI → Service → Core → Models
+
+---
+
+# =========================
+# ACT MODE (EXECUTION)
+# =========================
+
+GOAL:
+Execute changes with ZERO noise.
+
+STRICT RULES:
+
+- OUTPUT ONLY:
+  - modified files OR
+  - new files OR
+  - diffs
+
+- NO explanations
+- NO comments unless critical
+- NO examples
+- MAX 120 tokens (excluding code)
+
+AFTER EVERY CHANGE:
+
+RUN:
+
+1. poetry run pytest --cov
+2. poetry run mypy
+
+IF FAIL:
+
+- Fix automatically
+- DO NOT ask unless blocked
+
+PERFORMANCE RULES:
+
+- Minimize edits
+- Avoid touching unrelated files
+- Prefer patching over rewriting
+
+---
+
+# =========================
+# FAILURE HANDLING
+# =========================
+
+IF UNCERTAIN:
+
+- Ask ONE short question
+- DO NOT guess
+
+IF CONTEXT TOO LARGE:
+
+- Request specific file

@@ -1,0 +1,141 @@
+Screen {
+    background: #0b1020;
+    color: #e6edf3;
+}
+
+Screen.theme-light {
+    background: #f7f8fb;
+    color: #111827;
+}
+
+/* Default (explicit) */
+Screen.theme-dark {
+    background: #0b1020;
+    color: #e6edf3;
+}
+
+/* -----------------------------
+   GLOBAL TYPOGRAPHY / SPACING
+------------------------------ */
+.title {
+    text-style: bold;
+    color: #7aa2ff;
+    margin: 0 0 1 0;
+}
+
+.muted {
+    color: #9aa4b2;
+}
+
+/* -----------------------------
+   LAYOUT PANELS
+------------------------------ */
+.panel {
+    padding: 1 2;
+    border: round #2a3244;
+    height: 1fr;
+}
+
+.density-compact .panel {
+    padding: 0 1;
+}
+
+.density-compact .title {
+    margin: 0 0 0 0;
+}
+
+.density-compact Input {
+    margin: 0;
+}
+
+.density-spacious .panel {
+    padding: 1 2;
+}
+
+.density-spacious Input {
+    margin: 1 0;
+}
+
+.left-panel {
+    width: 38%;
+    min-width: 34;
+}
+
+.right-panel {
+    width: 1fr;
+}
+
+/* -----------------------------
+   INPUT
+------------------------------ */
+Input {
+    margin: 1 0;
+    border: round #2a3244;
+}
+
+Input:focus {
+    border: round #7aa2ff;
+}
+
+/* -----------------------------
+   INTERACTIVE CONTROLS
+------------------------------ */
+Button {
+    margin: 0 1 0 0;
+}
+
+Button:focus {
+    border: round #7aa2ff;
+}
+
+Select {
+    margin: 1 0;
+    border: round #2a3244;
+}
+
+ListView:focus {
+    border: round #7aa2ff;
+}
+
+SelectionList:focus {
+    border: round #7aa2ff;
+}
+
+/* -----------------------------
+   LEARN MODE
+------------------------------ */
+#learn_streak {
+    margin: 0 0 1 0;
+    padding: 0 1;
+    border: round #2a3244;
+    background: #11172a;
+}
+
+Screen.theme-light #learn_streak {
+    background: #ffffff;
+    border: round #c7d2fe;
+}
+
+/* -----------------------------
+   STATUS BAR
+------------------------------ */
+#status_bar {
+    background: #11172a;
+    color: #9aa4b2;
+    padding: 0 2;
+    border-bottom: tall #2a3244;
+}
+
+Screen.theme-light #status_bar {
+    background: #eef2ff;
+    color: #4b5563;
+    border-bottom: tall #c7d2fe;
+}
+
+/* -----------------------------
+   SCROLL
+------------------------------ */
+#explorer_scroll {
+    height: 100%;
+    overflow-y: auto;
+}

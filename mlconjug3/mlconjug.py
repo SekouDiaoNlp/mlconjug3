@@ -44,23 +44,67 @@ class Conjugator:
     - Machine learning fallback for unknown verbs
     """
 
-    def __init__(self, language="fr", model=None):
+    def __init__(self, language="fr", model=None, backend="legacy"):
+        """
+        Initialize a conjugator instance.
+
+        Parameters
+        ----------
+        language : str, optional
+            Language code used for conjugation, by default "fr".
+        model : Model or estimator, optional
+            Trained model used for ML fallback on unknown verbs. If None,
+            the pre-trained packaged model for `language` is loaded.
+        backend : str, optional
+            Data backend identifier. Supported values are:
+            - "legacy" : Verbiste XML/JSON resources
+            - "unimorph" : UniMorph JSON resources
+
+        Raises
+        ------
+        ValueError
+            If `backend` is not one of "legacy" or "unimorph".
+
+        Examples
+        --------
+        >>> Conjugator(language="fr")
+        >>> Conjugator(language="fr", backend="unimorph")
+        """
         self.language = language
-        self.conjug_manager = Verbiste(language=language)
+        self.backend = backend
+
+        if backend == "legacy":
+            self.conjug_manager = Verbiste(language=language)
+            if not getattr(self.conjug_manager, "verbs", None):
+                self.backend = "unimorph"
+                self.conjug_manager = ConjugManager(language=language, use_unimorph=True)
+        elif backend == "unimorph":
+            self.conjug_manager = ConjugManager(language=language, use_unimorph=True)
+        else:
+            raise ValueError(
+                "Unsupported backend. Allowed values are 'legacy' or 'unimorph'."
+            )
 
         if model is None:
             resource_path = resources.files(RESOURCE_PACKAGE).joinpath(
                 PRE_TRAINED_MODEL_PATH[language]
             )
 
-            with resource_path.open("rb") as stream:
-                with ZipFile(stream) as content:
-                    with content.open(
-                        f"trained_model-{self.language}-final.pickle"
-                    ) as archive:
-                        model = joblib.load(archive)
-
-            self.set_model(model)
+            try:
+                with resource_path.open("rb") as stream:
+                    with ZipFile(stream) as content:
+                        with content.open(
+                            f"trained_model-{self.language}-final.pickle"
+                        ) as archive:
+                            model = joblib.load(archive)
+                self.set_model(model)
+            except FileNotFoundError:
+                logger.warning(
+                    _(
+                        "Pre-trained model archive not found; ML fallback disabled for this session."
+                    )
+                )
+                self.model = None
         else:
             if isinstance(model, Model):
                 self.set_model(model)
@@ -177,7 +221,12 @@ class Conjugator:
         if verb_info is None or conjug_info is None:
             return None
 
-        verb_object = VERBS[self.language](verb_info, conjug_info, subject)
+        verb_object = VERBS[self.language](
+            verb_info,
+            conjug_info,
+            subject,
+            predicted=True  # <-- IMPORTANT FIX
+        )
 
         if confidence_score is not None:
             verb_object.confidence_score = confidence_score
@@ -185,6 +234,19 @@ class Conjugator:
         return verb_object
 
     def set_model(self, model):
+        """
+        Set the ML fallback model used for unknown verbs.
+
+        Parameters
+        ----------
+        model : Model
+            Trained `mlconjug3.models.Model` instance.
+
+        Raises
+        ------
+        ValueError
+            If `model` is not an instance of `Model`.
+        """
         if not isinstance(model, Model):
             logger.warning(
                 _("Please provide an instance of a mlconjug3.mlconjug3.Model")

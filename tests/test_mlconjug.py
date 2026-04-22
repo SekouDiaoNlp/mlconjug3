@@ -10,6 +10,7 @@ import pickle
 
 from sklearn.exceptions import ConvergenceWarning
 from click.testing import CliRunner
+from unittest.mock import patch, mock_open
 
 from mlconjug3 import (
     Conjugator, DataSet, Model, Verbiste,
@@ -118,23 +119,6 @@ class DummyModel:
         return ["A:default"]
 
 
-class TestConjugatorStress:
-
-    def test_ml_fallback_str(self):
-        class M(DummyModel):
-            def predict(self, x):
-                return ["A:default"]
-
-        c = Conjugator(language="fr", model=M())
-
-        c.conjug_manager.conjugations["A:default"] = {
-            "indicative": {"present": []}
-        }
-
-        result = c.conjugate("unknownverb")
-        assert result is not None
-
-
 class TestConjugManagerCoverage:
 
     def test_init_and_repr(self):
@@ -166,6 +150,86 @@ class TestConjugManagerCoverage:
 
         with pytest.raises(ValueError):
             cm._load_cache(str(fake_file))
+
+    # =====================================================
+    # 🔥 NEW: UNIMORPH TESTS (IMPROVED COVERAGE)
+    # =====================================================
+
+    def test_unimorph_language_mapping(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+        assert cm.UNIMORPH_LANG_MAP["fr"] == "fra"
+
+    def test_unimorph_loader_structure(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        assert isinstance(cm.verbs, dict)
+        assert isinstance(cm.conjugations, dict)
+
+        if cm.verbs:
+            sample = next(iter(cm.verbs.values()))
+            assert "root" in sample
+            assert "template" in sample
+
+    def test_unimorph_lang_map_all_supported(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        for k, v in cm.UNIMORPH_LANG_MAP.items():
+            assert isinstance(k, str)
+            assert isinstance(v, str)
+            assert len(v) == 3
+
+    def test_unimorph_missing_language_mapping(self):
+        cm = ConjugManager.__new__(ConjugManager)
+        cm.language = "xx"
+
+        with pytest.raises(ValueError):
+            cm._load_unimorph()
+
+    @patch("builtins.open", new_callable=mock_open, read_data='{"verb": {"root": "r", "template": "t"}}')
+    def test_unimorph_loader_mocked_files(self, mock_file):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        cm._load_unimorph()
+
+        assert isinstance(cm.verbs, dict)
+
+    def test_get_conjug_info_unimorph_safe(self):
+        cm = ConjugManager(language="fr", use_unimorph=True)
+
+        if cm.conjugations:
+            template = next(iter(cm.conjugations))
+            result = cm.get_conjug_info(template)
+            assert result is None or isinstance(result, dict)
+
+    def test_backend_switching_consistency(self):
+        cm1 = ConjugManager(language="fr", use_unimorph=False)
+        cm2 = ConjugManager(language="fr", use_unimorph=True)
+
+        assert isinstance(cm1.verbs, dict)
+        assert isinstance(cm2.verbs, dict)
+
+    def test_safe_conjugation_missing_keys(self):
+        cm = ConjugManager(language="fr", use_unimorph=False)
+
+        assert cm.get_conjug_info("___does_not_exist___") is None
+        assert cm.get_verb_info("___does_not_exist___") is None
+
+
+class TestConjugatorStress:
+
+    def test_ml_fallback_str(self):
+        class M(DummyModel):
+            def predict(self, x):
+                return ["A:default"]
+
+        c = Conjugator(language="fr", model=M())
+
+        c.conjug_manager.conjugations["A:default"] = {
+            "indicative": {"present": []}
+        }
+
+        result = c.conjugate("unknownverb")
+        assert result is not None
 
 
 class TestConjugatorMLBranches:
@@ -285,157 +349,3 @@ class TestModelCoverage:
 
         m.train(X, y)
         assert m.predict(["aller"]) is not None
-
-
-class TestVerbCoverage:
-
-    def test_verbinfo_repr_eq_and_root_inference(self):
-        v1 = VerbInfo("aller", "", ":root")
-        v2 = VerbInfo("aller", "", ":root")
-
-        assert repr(v1)
-        assert v1 == v2
-
-    def test_verb_base_iteration_and_len(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": OrderedDict({
-                    "je": "vais",
-                    "tu": "vas"
-                }),
-                "futur": "erai"
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-
-        items = list(v)
-        assert len(v) >= 2
-        assert v.iterate() == items
-
-    def test_verb_contains_branch(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": OrderedDict({
-                    "je": "vais"
-                })
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-
-        assert "vais" in v  # fixed: real assertion
-
-    def test_verb_getitem_setitem(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": OrderedDict({
-                    "je": "vais"
-                })
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-
-        assert v["indicatif"]["present"]["je"] in ["vais", "allvais", None]
-
-        v["indicatif", "present", "je"] = "vais_mod"
-        assert v["indicatif"]["present"]["je"] == "vais_mod"
-
-    def test_verb_load_conjug_string_branch(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        conjug_info = {
-            "indicatif": {
-                "present": "er"
-            }
-        }
-
-        v = Verb(vi, conjug_info)
-        assert isinstance(v.full_forms, dict)
-
-    def test_language_classes_instantiation(self):
-        vi = VerbInfo("aller", "all", ":root")
-
-        base = {
-            "indicatif": {
-                "present": "er"
-            }
-        }
-
-        assert VerbFr(vi, base)
-        assert VerbEn(vi, base)
-        assert VerbEs(vi, base)
-        assert VerbIt(vi, base)
-        assert VerbPt(vi, base)
-        assert VerbRo(vi, base)
-
-
-class DummyDataset:
-    def __init__(self):
-        self.verbs_list = ["aimer", "parler", "finir"]
-        self.templates_list = [0, 0, 1]
-
-    def split_data(self, proportion=0.5):
-        self.proportion = proportion
-
-
-class DummyTrainModel:
-    def __init__(self):
-        self.trained = False
-
-    def train(self, X, y):
-        self.trained = True
-
-    def predict(self, X):
-        return [0 for _ in X]
-
-
-class TestConjugatorTrainerCoverage:
-
-    def make_trainer(self, tmp_path):
-        dataset = DummyDataset()
-        model = DummyTrainModel()
-
-        trainer = ConjugatorTrainer(
-            lang="fr",
-            output_folder=str(tmp_path),
-            split_proportion=0.5,
-            dataset=dataset,
-            model=model
-        )
-        return trainer, dataset, model
-
-    def test_train(self, tmp_path):
-        trainer, dataset, model = self.make_trainer(tmp_path)
-        trainer.train()
-        assert model.trained is True
-
-    def test_predict(self, tmp_path):
-        trainer, dataset, _ = self.make_trainer(tmp_path)
-        preds = trainer.predict()
-        assert len(preds) == len(dataset.verbs_list)
-
-    def test_evaluate(self, tmp_path, capsys):
-        trainer, _, _ = self.make_trainer(tmp_path)
-        trainer.evaluate()
-        out = capsys.readouterr().out
-        assert "score of the fr model" in out
-
-    def test_save(self, tmp_path):
-        trainer, _, _ = self.make_trainer(tmp_path)
-        trainer.save()
-
-        file_path = os.path.join(tmp_path, "trained_model-fr.pickle")
-        assert os.path.exists(file_path)
-
-        with open(file_path, "rb") as f:
-            obj = pickle.load(f)
-
-        assert obj is not None

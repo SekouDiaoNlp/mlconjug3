@@ -1,0 +1,464 @@
+{
+    "unimorph_i18n_conjugation_map": {
+        "fra": {
+            "mood": {
+                "IND": "Indicatif",
+                "SBJV": "Subjonctif",
+                "IMP": "Impératif",
+                "INF": "Infinitif",
+                "PTCP": "Participe"
+            },
+            "tense": {
+                "PRS": "Présent",
+                "PST": "Passé",
+                "IPFV": "Imparfait",
+                "PFV": "Passé simple",
+                "FUT": "Futur"
+            },
+            "aspect": {
+                "IPFV": "Imperfectif",
+                "PFV": "Perfectif"
+            }
+        },
+        "eng": {
+            "mood": {
+                "IND": "Indicative",
+                "SBJV": "Subjunctive",
+                "IMP": "Imperative",
+                "INF": "Infinitive",
+                "PTCP": "Participle"
+            },
+            "tense": {
+                "PRS": "Present",
+                "PST": "Past",
+                "IPFV": "Imperfective",
+                "PFV": "Perfective",
+                "FUT": "Future"
+            },
+            "aspect": {
+                "IPFV": "Imperfective",
+                "PFV": "Perfective"
+            }
+        },
+        "spa": {
+            "mood": {
+                "IND": "Indicativo",
+                "SBJV": "Subjuntivo",
+                "IMP": "Imperativo",
+                "INF": "Infinitivo",
+                "PTCP": "Participio"
+            },
+            "tense": {
+                "PRS": "Presente",
+                "PST": "Pasado",
+                "IPFV": "Imperfectivo",
+                "PFV": "Perfectivo",
+                "FUT": "Futuro"
+            },
+            "aspect": {
+                "IPFV": "Imperfectivo",
+                "PFV": "Perfectivo"
+            }
+        },
+        "ita": {
+            "mood": {
+                "IND": "Indicativo",
+                "SBJV": "Congiuntivo",
+                "IMP": "Imperativo",
+                "INF": "Infinito",
+                "PTCP": "Participio"
+            },
+            "tense": {
+                "PRS": "Presente",
+                "PST": "Passato",
+                "IPFV": "Imperfetto",
+                "PFV": "Perfetto",
+                "FUT": "Futuro"
+            },
+            "aspect": {
+                "IPFV": "Imperfettivo",
+                "PFV": "Perfettivo"
+            }
+        },
+        "por": {
+            "mood": {
+                "IND": "Indicativo",
+                "SBJV": "Subjuntivo",
+                "IMP": "Imperativo",
+                "INF": "Infinitivo",
+                "PTCP": "Particípio"
+            },
+            "tense": {
+                "PRS": "Presente",
+                "PST": "Passado",
+                "IPFV": "Imperfeito",
+                "PFV": "Perfeito",
+                "FUT": "Futuro"
+            },
+            "aspect": {
+                "IPFV": "Imperfeito",
+                "PFV": "Perfeito"
+            }
+        },
+        "ron": {
+            "mood": {
+                "IND": "Indicativ",
+                "SBJV": "Subjonctiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Participiu"
+            },
+            "tense": {
+                "PRS": "Prezent",
+                "PST": "Trecut",
+                "IPFV": "Imperfect",
+                "PFV": "Perfect",
+                "FUT": "Viitor"
+            },
+            "aspect": {
+                "IPFV": "Imperfectiv",
+                "PFV": "Perfectiv"
+            }
+        },
+        "deu": {
+            "mood": {
+                "IND": "Indikativ",
+                "SBJV": "Konjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Partizip"
+            },
+            "tense": {
+                "PRS": "Präsens",
+                "PST": "Präteritum",
+                "IPFV": "Imperfekt",
+                "PFV": "Perfekt",
+                "FUT": "Futur"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiv",
+                "PFV": "Perfektiv"
+            }
+        },
+        "nld": {
+            "mood": {
+                "IND": "Indicatief",
+                "SBJV": "Subjonctief",
+                "IMP": "Imperatief",
+                "INF": "Infinitief",
+                "PTCP": "Participium"
+            },
+            "tense": {
+                "PRS": "Tegenwoordige tijd",
+                "PST": "Verleden tijd",
+                "IPFV": "Imperfectief",
+                "PFV": "Perfectief",
+                "FUT": "Toekomende tijd"
+            },
+            "aspect": {
+                "IPFV": "Imperfectief",
+                "PFV": "Perfectief"
+            }
+        },
+        "swe": {
+            "mood": {
+                "IND": "Indikativ",
+                "SBJV": "Subjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Particip"
+            },
+            "tense": {
+                "PRS": "Presens",
+                "PST": "Preteritum",
+                "IPFV": "Imperfekt",
+                "PFV": "Perfekt",
+                "FUT": "Futurum"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiv",
+                "PFV": "Perfektiv"
+            }
+        },
+        "fin": {
+            "mood": {
+                "IND": "Indikatiivi",
+                "SBJV": "Konjunktiivi",
+                "IMP": "Imperatiivi",
+                "INF": "Infinitiivi",
+                "PTCP": "Partisiippi"
+            },
+            "tense": {
+                "PRS": "Preesens",
+                "PST": "Preteriti",
+                "IPFV": "Imperfekti",
+                "PFV": "Perfekti",
+                "FUT": "Futuuri"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiivinen",
+                "PFV": "Perfektiivinen"
+            }
+        },
+        "pol": {
+            "mood": {
+                "IND": "Indykatyw",
+                "SBJV": "Tryb łączący",
+                "IMP": "Tryb rozkazujący",
+                "INF": "Bezokolicznik",
+                "PTCP": "Imiesłów"
+            },
+            "tense": {
+                "PRS": "Czas teraźniejszy",
+                "PST": "Czas przeszły",
+                "IPFV": "Niedokonany",
+                "PFV": "Dokonany",
+                "FUT": "Czas przyszły"
+            },
+            "aspect": {
+                "IPFV": "Niedokonany",
+                "PFV": "Dokonany"
+            }
+        },
+        "ell": {
+            "mood": {
+                "IND": "Οριστική",
+                "SBJV": "Υποτακτική",
+                "IMP": "Προστακτική",
+                "INF": "Απαρέμφατο",
+                "PTCP": "Μετοχή"
+            },
+            "tense": {
+                "PRS": "Ενεστώτας",
+                "PST": "Αόριστος",
+                "IPFV": "Παρατατικός",
+                "PFV": "Στιγμιαίος",
+                "FUT": "Μέλλοντας"
+            },
+            "aspect": {
+                "IPFV": "Εξακολουθητικός",
+                "PFV": "Στιγμιαίος"
+            }
+        },
+        "bul": {
+            "mood": {
+                "IND": "Изявително",
+                "SBJV": "Субюнктив",
+                "IMP": "Повелително",
+                "INF": "Инфинитив",
+                "PTCP": "Причастие"
+            },
+            "tense": {
+                "PRS": "Сегашно",
+                "PST": "Минало",
+                "IPFV": "Несвършено",
+                "PFV": "Свършено",
+                "FUT": "Бъдеще"
+            },
+            "aspect": {
+                "IPFV": "Несвършен вид",
+                "PFV": "Свършен вид"
+            }
+        },
+        "slv": {
+            "mood": {
+                "IND": "Oziralnik",
+                "SBJV": "Konjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Nedoločnik",
+                "PTCP": "Deležnik"
+            },
+            "tense": {
+                "PRS": "Sedanjik",
+                "PST": "Preteklik",
+                "IPFV": "Nedovršni",
+                "PFV": "Dovršni",
+                "FUT": "Prihodnjik"
+            },
+            "aspect": {
+                "IPFV": "Nedovršni",
+                "PFV": "Dovršni"
+            }
+        },
+        "dan": {
+            "mood": {
+                "IND": "Indikativ",
+                "SBJV": "Konjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Participium"
+            },
+            "tense": {
+                "PRS": "Nutid",
+                "PST": "Datid",
+                "IPFV": "Imperfekt",
+                "PFV": "Perfekt",
+                "FUT": "Fremtid"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiv",
+                "PFV": "Perfektiv"
+            }
+        },
+        "afr": {
+            "mood": {
+                "IND": "Indikatief",
+                "SBJV": "Konjunktief",
+                "IMP": "Imperatief",
+                "INF": "Infinitief",
+                "PTCP": "Deelwoord"
+            },
+            "tense": {
+                "PRS": "Teenwoordige tyd",
+                "PST": "Verlede tyd",
+                "IPFV": "Onvoltooide verlede",
+                "PFV": "Voltooide verlede",
+                "FUT": "Toekomende tyd"
+            },
+            "aspect": {
+                "IPFV": "Onvoltooid",
+                "PFV": "Voltooid"
+            }
+        },
+        "nob": {
+            "mood": {
+                "IND": "Indikativ",
+                "SBJV": "Konjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Partisipp"
+            },
+            "tense": {
+                "PRS": "Presens",
+                "PST": "Preteritum",
+                "IPFV": "Imperfekt",
+                "PFV": "Perfekt",
+                "FUT": "Futurum"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiv",
+                "PFV": "Perfektiv"
+            }
+        },
+        "nno": {
+            "mood": {
+                "IND": "Indikativ",
+                "SBJV": "Konjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Partisipp"
+            },
+            "tense": {
+                "PRS": "Presens",
+                "PST": "Preteritum",
+                "IPFV": "Imperfekt",
+                "PFV": "Perfekt",
+                "FUT": "Futurum"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiv",
+                "PFV": "Perfektiv"
+            }
+        },
+        "lit": {
+            "mood": {
+                "IND": "Indikatyvas",
+                "SBJV": "Subjunktyvas",
+                "IMP": "Imperatyvas",
+                "INF": "Bendratis",
+                "PTCP": "Dalyvis"
+            },
+            "tense": {
+                "PRS": "Esamasis",
+                "PST": "Būtasis",
+                "IPFV": "Netobulas",
+                "PFV": "Tobulas",
+                "FUT": "Būsimasis"
+            },
+            "aspect": {
+                "IPFV": "Netobulinis",
+                "PFV": "Tobulinis"
+            }
+        },
+        "lav": {
+            "mood": {
+                "IND": "Indikatīvs",
+                "SBJV": "Subjunktīvs",
+                "IMP": "Imperatīvs",
+                "INF": "Infinitīvs",
+                "PTCP": "Divdabis"
+            },
+            "tense": {
+                "PRS": "Tagadne",
+                "PST": "Pagātne",
+                "IPFV": "Nepabeigts",
+                "PFV": "Pabeigts",
+                "FUT": "Nākotne"
+            },
+            "aspect": {
+                "IPFV": "Nepabeigts",
+                "PFV": "Pabeigts"
+            }
+        },
+        "hbs": {
+            "mood": {
+                "IND": "Indikativ",
+                "SBJV": "Konjunktiv",
+                "IMP": "Imperativ",
+                "INF": "Infinitiv",
+                "PTCP": "Particip"
+            },
+            "tense": {
+                "PRS": "Sadašnjost",
+                "PST": "Prošlost",
+                "IPFV": "Imperfekat",
+                "PFV": "Perfekat",
+                "FUT": "Budućnost"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiv",
+                "PFV": "Perfektiv"
+            }
+        },
+        "slk": {
+            "mood": {
+                "IND": "Indikatív",
+                "SBJV": "Konjunktív",
+                "IMP": "Imperatív",
+                "INF": "Infinitív",
+                "PTCP": "Príčastie"
+            },
+            "tense": {
+                "PRS": "Prítomný",
+                "PST": "Minulý",
+                "IPFV": "Nedokonavý",
+                "PFV": "Dokonavý",
+                "FUT": "Budúci"
+            },
+            "aspect": {
+                "IPFV": "Nedokonavý",
+                "PFV": "Dokonavý"
+            }
+        },
+        "est": {
+            "mood": {
+                "IND": "Kindel kõneviis",
+                "SBJV": "Käskiv",
+                "IMP": "Käskiv",
+                "INF": "Tegusõna",
+                "PTCP": "Kesksõna"
+            },
+            "tense": {
+                "PRS": "Olevik",
+                "PST": "Minevik",
+                "IPFV": "Imperfekt",
+                "PFV": "Perfekt",
+                "FUT": "Tulevik"
+            },
+            "aspect": {
+                "IPFV": "Imperfektiivne",
+                "PFV": "Perfektiivne"
+            }
+        }
+    }
+}

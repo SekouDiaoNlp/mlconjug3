@@ -1,0 +1,93 @@
+# =========================
+# PYTHON CACHE / BUILD ARTIFACTS
+# =========================
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.coverage
+coverage.xml
+.mypy_cache/
+.pytest_cache/
+.tox/
+.nox/
+
+# =========================
+# DOCS (VERY LARGE)
+# =========================
+docs/_build/
+docs/_static/
+docs/_modules/
+site/
+*.html
+*.js.map
++# prevent LLM explosion
++**/*.md
++**/*.txt
+
+# =========================
+# DATASETS (CRITICAL - HUGE TOKEN SOURCE)
+# =========================
+mlconjug3/data/
+utils/unimorph_data/
+utils/conjugation_data/
+utils/trained_models/
+utils/models/
+utils/trained_models/
+utils/models/old_models/
+mlconjug3/data/conjugation_data/
+mlconjug3/data/conjug_manager/
+
+# raw corpora
+*.json
+*.pkl
+*.zip
+*.xz
+*.tsv
+*.xml
+
+# =========================
+# LOGS
+# =========================
+*.log
+utils/logs/
+unimorph_parser.log
+
+# =========================
+# TEMP / EXPERIMENTAL CODE
+# =========================
+utils/trash/
+utils/init_tui_structure.py
+utils/pin_github_actions.py
+
+# =========================
+# LARGE GENERATED FILES
+# =========================
+conjugation_table.json
+coverage.xml
+
+# =========================
+# IDE / ENV
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# =========================
+# KEEP ONLY CORE CODE (ALLOWLIST STYLE)
+# =========================
+!mlconjug3/**/*.py
+!mlconjug3/**/*.pyi
+!mlconjug3/core/**
+!mlconjug3/cli.py
+!mlconjug3/mlconjug.py
+!mlconjug3/tui/**
+!mlconjug3/utils/logger.py
+!mlconjug3/utils/model_trainer.py
+!mlconjug3/utils/error_analysis.py
+!tests/**

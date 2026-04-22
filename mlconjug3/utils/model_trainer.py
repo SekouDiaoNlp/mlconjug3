@@ -27,29 +27,33 @@ class ConjugatorTrainer:
     - Evaluation of template prediction accuracy
     - Persistence of trained models
 
-    :param lang: Target language code (e.g., 'fr', 'en', 'es').
-    :type lang: str
-    :param output_folder: Directory where trained model will be saved.
-    :type output_folder: str
-    :param split_proportion: Train/test split ratio for dataset.
-    :type split_proportion: float
-    :param dataset: Dataset object providing verbs and templates.
-    :type dataset: DataSet
-    :param model: Machine learning model to train.
-    :type model: Model
+    Parameters
+    ----------
+    lang : str
+        Target language code (e.g., "fr", "en", "es").
+    output_folder : str
+        Directory where the trained model will be saved.
+    split_proportion : float
+        Train/test split ratio for the dataset.
+    dataset : DataSet
+        Dataset object providing verbs and templates.
+    model : Model
+        Machine learning model to train.
 
-    :ivar lang: Language of the training pipeline.
-    :vartype lang: str
-    :ivar output_folder: Output directory for serialized model.
-    :vartype output_folder: str
-    :ivar split_proportion: Dataset split ratio.
-    :vartype split_proportion: float
-    :ivar dataset: Dataset instance used for training.
-    :vartype dataset: DataSet
-    :ivar model: ML model instance.
-    :vartype model: Model
-    :ivar conjugator: mlconjug3 Conjugator instance wrapping the model.
-    :vartype conjugator: Conjugator
+    Attributes
+    ----------
+    lang : str
+        Language of the training pipeline.
+    output_folder : str
+        Output directory for serialized model.
+    split_proportion : float
+        Dataset split ratio.
+    dataset : DataSet
+        Dataset instance used for training.
+    model : Model
+        Machine learning model instance.
+    conjugator : Conjugator
+        `mlconjug3` conjugator wrapper that uses the configured model.
     """
 
     def __init__(self, lang, output_folder, split_proportion, dataset, model):
@@ -91,8 +95,10 @@ class ConjugatorTrainer:
         """
         Generate predictions for all verbs in the dataset.
 
-        :return: Predicted template indices.
-        :rtype: list | numpy.ndarray
+        Returns
+        -------
+        list or numpy.ndarray
+            Predicted template indices.
         """
         return self.model.predict(self.dataset.verbs_list)
 

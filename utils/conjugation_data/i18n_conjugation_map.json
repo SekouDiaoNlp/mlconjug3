@@ -1,0 +1,675 @@
+{
+  "metadata": {
+    "description": "Mapping between UniMorph feature encodings and native language names for moods, tenses, aspects, and grammatical categories",
+    "version": "1.0",
+    "generated_date": "2026-04-20",
+    "languages_included": 27,
+    "source": "UniMorph schema documentation"
+  },
+  "language_codes": {
+    "afr": "Afrikaans",
+    "bul": "Bulgarian",
+    "dan": "Danish",
+    "deu": "German",
+    "ell": "Greek",
+    "eng": "English",
+    "est": "Estonian",
+    "fin": "Finnish",
+    "fra": "French",
+    "hbs": "Serbo-Croatian",
+    "ita": "Italian",
+    "lav": "Latvian",
+    "lit": "Lithuanian",
+    "nld": "Dutch",
+    "nno": "Norwegian Nynorsk",
+    "nob": "Norwegian Bokmål",
+    "pol": "Polish",
+    "por": "Portuguese",
+    "ron": "Romanian",
+    "slk": "Slovak",
+    "slv": "Slovenian",
+    "spa": "Spanish",
+    "swe": "Swedish"
+  },
+  "mood_mapping": {
+    "indicative": {
+      "encoding": "IND",
+      "description": "Indicates factual statements or positive beliefs",
+      "native_names": {
+        "afr": "aantonende wyse",
+        "bul": "изявително наклонение",
+        "dan": "indikativ",
+        "deu": "Indikativ",
+        "ell": "οριστική",
+        "eng": "indicative",
+        "est": "kindel kõneviis",
+        "fin": "indikatiivi",
+        "fra": "indicatif",
+        "hbs": "indikativ",
+        "ita": "indicativo",
+        "lav": "īstenības izteiksme",
+        "lit": "tiesioginė nuosaka",
+        "nld": "aantonende wijs",
+        "nno": "indikativ",
+        "nob": "indikativ",
+        "pol": "tryb oznajmujący",
+        "por": "indicativo",
+        "ron": "indicativ",
+        "slk": "oznamovací spôsob",
+        "slv": "povedni naklon",
+        "spa": "indicativo",
+        "swe": "indikativ"
+      }
+    },
+    "subjunctive": {
+      "encoding": "SBJV",
+      "description": "Expresses hypothetical, wished, or demanded situations",
+      "native_names": {
+        "afr": "aanvoegende wyse",
+        "bul": "подчинително наклонение",
+        "dan": "konjunktiv",
+        "deu": "Konjunktiv",
+        "ell": "υποτακτική",
+        "eng": "subjunctive",
+        "est": "kaudne kõneviis",
+        "fin": "subjunktiivi",
+        "fra": "subjonctif",
+        "hbs": "konjunktiv",
+        "ita": "congiuntivo",
+        "lav": "vēlējuma izteiksme",
+        "lit": "tariamoji nuosaka",
+        "nld": "aanvoegende wijs",
+        "nno": "konjunktiv",
+        "nob": "konjunktiv",
+        "pol": "tryb łączący",
+        "por": "subjuntivo",
+        "ron": "subjonctiv",
+        "slk": "spojovací spôsob",
+        "slv": "velelni naklon",
+        "spa": "subjuntivo",
+        "swe": "konjunktiv"
+      }
+    },
+    "conditional": {
+      "encoding": "COND",
+      "description": "Expresses actions that would happen under certain conditions",
+      "native_names": {
+        "afr": "voorwaardelike wyse",
+        "bul": "условно наклонение",
+        "dan": "konditionalis",
+        "deu": "Konditional",
+        "ell": "υποθετική",
+        "eng": "conditional",
+        "est": "tingiv kõneviis",
+        "fin": "konditionaali",
+        "fra": "conditionnel",
+        "hbs": "kondicional",
+        "ita": "condizionale",
+        "lav": "vēlējuma izteiksme",
+        "lit": "geidžiamoji nuosaka",
+        "nld": "conditionele wijs",
+        "nno": "kondisjonalis",
+        "nob": "kondisjonalis",
+        "pol": "tryb warunkowy",
+        "por": "condicional",
+        "ron": "condițional",
+        "slk": "podmieňovací spôsob",
+        "slv": "pogojni naklon",
+        "spa": "condicional",
+        "swe": "konditionalis"
+      }
+    },
+    "imperative": {
+      "encoding": "IMP",
+      "description": "Expresses direct commands or requests",
+      "native_names": {
+        "afr": "gebiedende wyse",
+        "bul": "повелително наклонение",
+        "dan": "bydeform",
+        "deu": "Imperativ",
+        "ell": "προστακτική",
+        "eng": "imperative",
+        "est": "käskiv kõneviis",
+        "fin": "imperatiivi",
+        "fra": "impératif",
+        "hbs": "imperativ",
+        "ita": "imperativo",
+        "lav": "pavēles izteiksme",
+        "lit": "liepiamoji nuosaka",
+        "nld": "gebiedende wijs",
+        "nno": "imperativ",
+        "nob": "imperativ",
+        "pol": "tryb rozkazujący",
+        "por": "imperativo",
+        "ron": "imperativ",
+        "slk": "rozkazovací spôsob",
+        "slv": "velelni naklon",
+        "spa": "imperativo",
+        "swe": "imperativ"
+      }
+    },
+    "optative": {
+      "encoding": "OPT",
+      "description": "Expresses wishes or hopes",
+      "native_names": {
+        "afr": "wenslike wyse",
+        "bul": "желателно наклонение",
+        "deu": "Optativ",
+        "ell": "ευκτική",
+        "eng": "optative",
+        "est": "sooviv kõneviis",
+        "fin": "optatiivi",
+        "fra": "optatif",
+        "hbs": "optativ",
+        "ita": "ottativo",
+        "lav": "vēlējuma izteiksme",
+        "lit": "geidžiamoji nuosaka",
+        "pol": "tryb życzący",
+        "por": "optativo",
+        "ron": "optativ",
+        "spa": "optativo"
+      }
+    }
+  },
+  "tense_mapping": {
+    "present": {
+      "encoding": "PRS",
+      "description": "Current or ongoing actions",
+      "native_names": {
+        "afr": "teenwoordige tyd",
+        "bul": "сегашно време",
+        "dan": "nutid",
+        "deu": "Präsens",
+        "ell": "ενεστώτας",
+        "eng": "present",
+        "est": "olevik",
+        "fin": "preesens",
+        "fra": "présent",
+        "hbs": "prezent",
+        "ita": "presente",
+        "lav": "tagadne",
+        "lit": "esamasis laikas",
+        "nld": "tegenwoordige tijd",
+        "nno": "presens",
+        "nob": "presens",
+        "pol": "czas teraźniejszy",
+        "por": "presente",
+        "ron": "prezent",
+        "slk": "prítomný čas",
+        "slv": "sedanjik",
+        "spa": "presente",
+        "swe": "presens"
+      }
+    },
+    "past": {
+      "encoding": "PST",
+      "description": "Actions that occurred before now",
+      "native_names": {
+        "afr": "verlede tyd",
+        "bul": "минало време",
+        "dan": "datid",
+        "deu": "Präteritum",
+        "ell": "αόριστος",
+        "eng": "past",
+        "est": "minevik",
+        "fin": "imperfekti",
+        "fra": "passé",
+        "hbs": "prošlo vrijeme",
+        "ita": "passato",
+        "lav": "pagātne",
+        "lit": "būtasis laikas",
+        "nld": "verleden tijd",
+        "nno": "preteritum",
+        "nob": "preteritum",
+        "pol": "czas przeszły",
+        "por": "passado",
+        "ron": "trecut",
+        "slk": "minulý čas",
+        "slv": "preteklik",
+        "spa": "pasado",
+        "swe": "preteritum"
+      }
+    },
+    "future": {
+      "encoding": "FUT",
+      "description": "Actions that will occur later",
+      "native_names": {
+        "afr": "toekomende tyd",
+        "bul": "бъдеще време",
+        "dan": "fremtid",
+        "deu": "Futur",
+        "ell": "μέλλοντας",
+        "eng": "future",
+        "est": "tulevik",
+        "fin": "futuuri",
+        "fra": "futur",
+        "hbs": "buduće vrijeme",
+        "ita": "futuro",
+        "lav": "nākotne",
+        "lit": "būsimasis laikas",
+        "nld": "toekomende tijd",
+        "nno": "futurum",
+        "nob": "futurum",
+        "pol": "czas przyszły",
+        "por": "futuro",
+        "ron": "viitor",
+        "slk": "budúci čas",
+        "slv": "prihodnjik",
+        "spa": "futuro",
+        "swe": "futurum"
+      }
+    }
+  },
+  "aspect_mapping": {
+    "perfective": {
+      "encoding": "PFV",
+      "description": "Actions viewed as complete wholes",
+      "native_names": {
+        "bul": "свършен вид",
+        "deu": "perfektiv",
+        "ell": "συνοπτική",
+        "eng": "perfective",
+        "fra": "perfectif",
+        "hbs": "svršeni vid",
+        "ita": "perfettivo",
+        "pol": "aspekt dokonany",
+        "por": "perfectivo",
+        "ron": "perfectiv",
+        "rus": "совершенный вид",
+        "slk": "dokonavý vid",
+        "slv": "dovršni vid",
+        "spa": "perfectivo",
+        "ukr": "доконаний вид"
+      }
+    },
+    "imperfective": {
+      "encoding": "IPFV",
+      "description": "Actions viewed as ongoing or repeated",
+      "native_names": {
+        "bul": "несвършен вид",
+        "deu": "imperfektiv",
+        "ell": "εξακολουθητική",
+        "eng": "imperfective",
+        "fra": "imperfectif",
+        "hbs": "nesvršeni vid",
+        "ita": "imperfettivo",
+        "pol": "aspekt niedokonany",
+        "por": "imperfectivo",
+        "ron": "imperfectiv",
+        "rus": "несовершенный вид",
+        "slk": "nedokonavý vid",
+        "slv": "nedovršni vid",
+        "spa": "imperfectivo",
+        "ukr": "недоконаний вид"
+      }
+    },
+    "progressive": {
+      "encoding": "PROG",
+      "description": "Actions in progress at a specific time",
+      "native_names": {
+        "deu": "progressiv",
+        "eng": "progressive",
+        "fin": "progressiivi",
+        "fra": "progressif",
+        "ita": "progressivo",
+        "nld": "progressief",
+        "por": "progressivo",
+        "spa": "progresivo",
+        "swe": "progressiv"
+      }
+    },
+    "habitual": {
+      "encoding": "HAB",
+      "description": "Actions that occur regularly or habitually",
+      "native_names": {
+        "eng": "habitual",
+        "fin": "habituaalinen",
+        "fra": "habituel",
+        "por": "habitual",
+        "spa": "habitual"
+      }
+    }
+  },
+  "voice_mapping": {
+    "active": {
+      "encoding": "ACT",
+      "description": "Subject performs the action",
+      "native_names": {
+        "afr": "aktiewe vorm",
+        "bul": "активен залог",
+        "dan": "aktiv",
+        "deu": "Aktiv",
+        "ell": "ενεργητική φωνή",
+        "eng": "active",
+        "est": "isikuline tegumood",
+        "fin": "aktiivi",
+        "fra": "actif",
+        "hbs": "aktiv",
+        "ita": "attivo",
+        "lav": "aktīvs",
+        "lit": "veikiamoji rūšis",
+        "nld": "actieve vorm",
+        "nno": "aktiv",
+        "nob": "aktiv",
+        "pol": "strona czynna",
+        "por": "ativo",
+        "ron": "activ",
+        "slk": "činný rod",
+        "slv": "tvornik",
+        "spa": "activo",
+        "swe": "aktiv"
+      }
+    },
+    "passive": {
+      "encoding": "PASS",
+      "description": "Subject receives the action",
+      "native_names": {
+        "afr": "lydende vorm",
+        "bul": "пасивен залог",
+        "dan": "passiv",
+        "deu": "Passiv",
+        "ell": "παθητική φωνή",
+        "eng": "passive",
+        "est": "umbisikuline tegumood",
+        "fin": "passiivi",
+        "fra": "passif",
+        "hbs": "pasiv",
+        "ita": "passivo",
+        "lav": "pasīvs",
+        "lit": "neveikiamoji rūšis",
+        "nld": "passieve vorm",
+        "nno": "passiv",
+        "nob": "passiv",
+        "pol": "strona bierna",
+        "por": "passivo",
+        "ron": "pasiv",
+        "slk": "trpný rod",
+        "slv": "trpnik",
+        "spa": "pasivo",
+        "swe": "passiv"
+      }
+    },
+    "middle": {
+      "encoding": "MID",
+      "description": "Subject is both agent and patient",
+      "native_names": {
+        "deu": "Medium",
+        "ell": "μέση φωνή",
+        "eng": "middle",
+        "fra": "moyen",
+        "ita": "medio",
+        "por": "médio",
+        "spa": "medio"
+      }
+    }
+  },
+  "person_mapping": {
+    "1": {
+      "encoding": "1",
+      "description": "First person (speaker)",
+      "native_names": {
+        "common": {
+          "singular": "first person singular",
+          "plural": "first person plural"
+        }
+      }
+    },
+    "2": {
+      "encoding": "2",
+      "description": "Second person (addressee)",
+      "native_names": {
+        "common": {
+          "singular": "second person singular",
+          "plural": "second person plural"
+        }
+      }
+    },
+    "3": {
+      "encoding": "3",
+      "description": "Third person (other)",
+      "native_names": {
+        "common": {
+          "singular": "third person singular",
+          "plural": "third person plural"
+        }
+      }
+    }
+  },
+  "number_mapping": {
+    "singular": {
+      "encoding": "SG",
+      "description": "One entity",
+      "native_names": {
+        "afr": "enkelvoud",
+        "bul": "единствено число",
+        "dan": "ental",
+        "deu": "Singular",
+        "ell": "ενικός",
+        "eng": "singular",
+        "est": "ainsus",
+        "fin": "yksikkö",
+        "fra": "singulier",
+        "hbs": "jednina",
+        "ita": "singolare",
+        "lav": "vienskaitlis",
+        "lit": "vienaskaita",
+        "nld": "enkelvoud",
+        "nno": "eintal",
+        "nob": "entall",
+        "pol": "liczba pojedyncza",
+        "por": "singular",
+        "ron": "singular",
+        "slk": "jednotné číslo",
+        "slv": "ednina",
+        "spa": "singular",
+        "swe": "singular"
+      }
+    },
+    "plural": {
+      "encoding": "PL",
+      "description": "Multiple entities",
+      "native_names": {
+        "afr": "meervoud",
+        "bul": "множествено число",
+        "dan": "flertal",
+        "deu": "Plural",
+        "ell": "πληθυντικός",
+        "eng": "plural",
+        "est": "mitmus",
+        "fin": "monikko",
+        "fra": "pluriel",
+        "hbs": "množina",
+        "ita": "plurale",
+        "lav": "daudzskaitlis",
+        "lit": "daugiskaita",
+        "nld": "meervoud",
+        "nno": "fleirtal",
+        "nob": "flertall",
+        "pol": "liczba mnoga",
+        "por": "plural",
+        "ron": "plural",
+        "slk": "množné číslo",
+        "slv": "množina",
+        "spa": "plural",
+        "swe": "plural"
+      }
+    },
+    "dual": {
+      "encoding": "DU",
+      "description": "Exactly two entities",
+      "native_names": {
+        "slk": "dvojné číslo",
+        "slv": "dvojina"
+      }
+    }
+  },
+  "nonfinite_mapping": {
+    "infinitive": {
+      "encoding": "INF",
+      "description": "Basic form without tense/person marking",
+      "native_names": {
+        "afr": "infinitief",
+        "bul": "инфинитив",
+        "dan": "infinitiv",
+        "deu": "Infinitiv",
+        "ell": "απαρέμφατο",
+        "eng": "infinitive",
+        "est": "tegevusnimi",
+        "fin": "infinitiivi",
+        "fra": "infinitif",
+        "hbs": "infinitiv",
+        "ita": "infinito",
+        "lav": "infinitīvs",
+        "lit": "bendratis",
+        "nld": "infinitief",
+        "nno": "infinitiv",
+        "nob": "infinitiv",
+        "pol": "bezokolicznik",
+        "por": "infinitivo",
+        "ron": "infinitiv",
+        "slk": "infinitív",
+        "slv": "nedoločnik",
+        "spa": "infinitivo",
+        "swe": "infinitiv"
+      }
+    },
+    "participle": {
+      "encoding": "PRTC",
+      "description": "Verbal adjective",
+      "native_names": {
+        "deu": "Partizip",
+        "eng": "participle",
+        "fra": "participe",
+        "ita": "participio",
+        "por": "particípio",
+        "spa": "participio"
+      }
+    },
+    "gerund": {
+      "encoding": "GER",
+      "description": "Verbal noun",
+      "native_names": {
+        "eng": "gerund",
+        "fra": "gérondif",
+        "ita": "gerundio",
+        "por": "gerúndio",
+        "spa": "gerundio"
+      }
+    }
+  },
+  "polarity_mapping": {
+    "positive": {
+      "encoding": "POS",
+      "description": "Affirmative statements",
+      "native_names": {
+        "common": "affirmative"
+      }
+    },
+    "negative": {
+      "encoding": "NEG",
+      "description": "Negative statements",
+      "native_names": {
+        "common": "negative"
+      }
+    }
+  },
+  "compound_tenses": {
+    "present_perfect": {
+      "components": ["present", "perfective"],
+      "description": "Actions completed in the past with present relevance",
+      "examples": {
+        "eng": "have/has + past participle",
+        "fra": "passé composé",
+        "ita": "passato prossimo",
+        "spa": "pretérito perfecto compuesto",
+        "deu": "Perfekt",
+        "por": "pretérito perfeito composto"
+      }
+    },
+    "past_perfect": {
+      "components": ["past", "perfective"],
+      "description": "Actions completed before another past action",
+      "examples": {
+        "eng": "had + past participle",
+        "fra": "plus-que-parfait",
+        "ita": "trapassato prossimo",
+        "spa": "pretérito pluscuamperfecto",
+        "deu": "Plusquamperfekt",
+        "por": "pretérito mais-que-perfeito composto"
+      }
+    },
+    "future_perfect": {
+      "components": ["future", "perfective"],
+      "description": "Actions that will be completed before a future time",
+      "examples": {
+        "eng": "will have + past participle",
+        "fra": "futur antérieur",
+        "ita": "futuro anteriore",
+        "spa": "futuro perfecto",
+        "deu": "Futur II",
+        "por": "futuro composto"
+      }
+    },
+    "present_progressive": {
+      "components": ["present", "progressive"],
+      "description": "Actions currently in progress",
+      "examples": {
+        "eng": "am/is/are + present participle",
+        "spa": "estar + gerundio",
+        "por": "estar + gerúndio",
+        "ita": "stare + gerundio"
+      }
+    },
+    "past_progressive": {
+      "components": ["past", "progressive"],
+      "description": "Actions that were in progress in the past",
+      "examples": {
+        "eng": "was/were + present participle",
+        "spa": "estaba/estaban + gerundio",
+        "por": "estava/estavam + gerúndio"
+      }
+    }
+  },
+  "special_forms": {
+    "imperfect": {
+      "encoding": "IPFV;PST",
+      "description": "Past imperfective aspect",
+      "native_names": {
+        "fra": "imparfait",
+        "ita": "imperfetto",
+        "por": "pretérito imperfeito",
+        "spa": "pretérito imperfecto",
+        "deu": "Präteritum",
+        "bul": "минало несвършено време",
+        "pol": "czas przeszły niedokonany"
+      }
+    },
+    "aorist": {
+      "encoding": "PFV;PST",
+      "description": "Simple past perfective aspect",
+      "native_names": {
+        "ell": "αόριστος",
+        "bul": "минало свършено време",
+        "hbs": "aorist",
+        "slk": "aorist"
+      }
+    },
+    "pluperfect": {
+      "encoding": "PST;PFV",
+      "description": "Past perfect",
+      "native_names": {
+        "fra": "plus-que-parfait",
+        "ita": "trapassato prossimo",
+        "por": "mais-que-perfeito",
+        "spa": "pluscuamperfecto"
+      }
+    }
+  },
+  "usage_notes": {
+    "encoding_format": "The encoding follows the UniMorph schema where multiple features are combined with semicolons (e.g., 'IND;PRS;1;SG')",
+    "verb_detection": "Words are identified as verbs if they contain any verb-related features (V, FIN, INF, etc.)",
+    "syncretism_handling": "Multiple possible endings for the same cell are separated by '/' in the output",
+    "person_number_mapping": "Indices 0-5 represent 1SG, 2SG, 3SG, 1PL, 2PL, 3PL respectively",
+    "feature_hierarchy": "Features are ordered consistently: finiteness > mood > tense > aspect > person > number > gender > voice > polarity"
+  }
+}
