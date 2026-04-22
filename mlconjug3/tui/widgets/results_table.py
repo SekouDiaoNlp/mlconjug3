@@ -14,10 +14,11 @@ It is designed to:
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, AbstractSet
 
 from textual.widgets import Tree, Static
 from textual.app import ComposeResult
+from rich.text import Text
 
 
 class ResultsTable(Static):
@@ -125,8 +126,8 @@ class ResultsTable(Static):
         """
         if mode == "ML":
             if confidence is not None:
-                return f"ML ({confidence:.2f})"
-            return "ML"
+                return f"ML* ({confidence:.2f})"
+            return "ML*"
         return "RULE"
 
     def _normalize_form(self, verb: str, form: Any) -> str:
@@ -168,6 +169,8 @@ class ResultsTable(Static):
         append: bool = False,
         confidence: Optional[float] = None,
         mode: str = "RULE",
+        allowed_moods: Optional[AbstractSet[str]] = None,
+        allowed_tenses: Optional[AbstractSet[str]] = None,
     ) -> None:
         """
         Render conjugation data into the tree view.
@@ -185,6 +188,10 @@ class ResultsTable(Static):
             ML confidence score if available.
         mode : str, optional
             Conjugation mode ("ML" or "RULE").
+        allowed_moods : set[str], optional
+            When provided, only moods in this set (case-insensitive) are shown.
+        allowed_tenses : set[str], optional
+            When provided, only tenses in this set (case-insensitive) are shown.
 
         Returns
         -------
@@ -192,6 +199,40 @@ class ResultsTable(Static):
         """
         badge: str = self._build_badge(mode, confidence)
         tree: Tree = self._tree
+        mood_filter = {m.lower() for m in allowed_moods} if allowed_moods else None
+        tense_filter = {t.lower() for t in allowed_tenses} if allowed_tenses else None
+        predicted = mode == "ML"
+
+        def _verb_label() -> Text:
+            head = Text(verb, style="bold #c0caf5" if predicted else "bold #7aa2ff")
+            meta = Text(f"  [{badge}]", style="#9aa4b2")
+            return head + meta
+
+        def _mood_label(value: Any) -> Text:
+            name = str(value).strip().capitalize()
+            prefix = "📘 "
+            return Text(prefix + name, style="bold #7aa2ff")
+
+        def _tense_label(value: Any) -> Text:
+            name = str(value).strip().capitalize()
+            prefix = "⏱ "
+            return Text(prefix + name, style="bold #c0caf5")
+
+        def _leaf_label(person: Optional[Any], form: str) -> Text:
+            clean = self._safe_form(form)
+            if clean == "?":
+                return Text("· ", style="#9aa4b2") + Text("missing", style="bold #fca5a5")
+            if predicted:
+                prefix = Text("⚡ ", style="#e0af68")
+            else:
+                prefix = Text("· ", style="#9aa4b2")
+
+            if person is None:
+                return prefix + Text(clean, style="#e6edf3")
+            p = Text(str(person), style="bold #9aa4b2")
+            sep = Text("  →  ", style="#3b4261")
+            v = Text(clean, style="#e6edf3")
+            return prefix + p + sep + v
 
         # -------------------------
         # BATCH MODE
@@ -203,14 +244,14 @@ class ResultsTable(Static):
                 verb_node = self._batch_roots[verb]
                 verb_node.children.clear()
             else:
-                verb_node = tree.root.add(f"{verb} [{badge}]", expand=False)
+                verb_node = tree.root.add(_verb_label(), expand=False)
                 self._batch_roots[verb] = verb_node
 
         else:
             self._batch_mode = False
             self._batch_roots.clear()
 
-            tree.root.label = f"{verb}  [{badge}]"
+            tree.root.label = _verb_label()
 
             for child in list(tree.root.children):
                 child.remove()
@@ -221,24 +262,26 @@ class ResultsTable(Static):
         # TREE BUILDING
         # -------------------------
         for mood, tenses in (conjugation or {}).items():
-            mood_node = verb_node.add(str(mood).capitalize(), expand=False)
+            mood_key = str(mood).lower()
+            if mood_filter is not None and mood_key not in mood_filter:
+                continue
+            mood_node = verb_node.add(_mood_label(mood), expand=False)
 
             for tense, persons in (tenses or {}).items():
-                tense_node = mood_node.add(str(tense).capitalize(), expand=False)
+                tense_key = str(tense).lower()
+                if tense_filter is not None and tense_key not in tense_filter:
+                    continue
+                tense_node = mood_node.add(_tense_label(tense), expand=False)
 
                 # CASE 1: dict structure
                 if isinstance(persons, dict):
                     for person, form in persons.items():
                         clean_form = self._normalize_form(verb, form)
-                        clean_form = self._safe_form(clean_form)
-
-                        tense_node.add_leaf(f"{person} ? {clean_form}")
+                        tense_node.add_leaf(_leaf_label(person, clean_form))
 
                 # CASE 2: string fallback
                 else:
                     clean_form = self._normalize_form(verb, persons)
-                    clean_form = self._safe_form(clean_form)
-
-                    tense_node.add_leaf(clean_form)
+                    tense_node.add_leaf(_leaf_label(None, clean_form))
 
         tree.refresh()

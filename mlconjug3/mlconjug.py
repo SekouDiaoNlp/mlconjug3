@@ -75,6 +75,9 @@ class Conjugator:
 
         if backend == "legacy":
             self.conjug_manager = Verbiste(language=language)
+            if not getattr(self.conjug_manager, "verbs", None):
+                self.backend = "unimorph"
+                self.conjug_manager = ConjugManager(language=language, use_unimorph=True)
         elif backend == "unimorph":
             self.conjug_manager = ConjugManager(language=language, use_unimorph=True)
         else:
@@ -87,14 +90,21 @@ class Conjugator:
                 PRE_TRAINED_MODEL_PATH[language]
             )
 
-            with resource_path.open("rb") as stream:
-                with ZipFile(stream) as content:
-                    with content.open(
-                        f"trained_model-{self.language}-final.pickle"
-                    ) as archive:
-                        model = joblib.load(archive)
-
-            self.set_model(model)
+            try:
+                with resource_path.open("rb") as stream:
+                    with ZipFile(stream) as content:
+                        with content.open(
+                            f"trained_model-{self.language}-final.pickle"
+                        ) as archive:
+                            model = joblib.load(archive)
+                self.set_model(model)
+            except FileNotFoundError:
+                logger.warning(
+                    _(
+                        "Pre-trained model archive not found; ML fallback disabled for this session."
+                    )
+                )
+                self.model = None
         else:
             if isinstance(model, Model):
                 self.set_model(model)

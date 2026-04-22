@@ -14,12 +14,29 @@ It is designed for:
 The widget emits a VerbSelected message when a verb is chosen.
 """
 
-from typing import List, Any, Optional
+from typing import List, Any
 
 from textual.containers import Vertical
 from textual.widgets import Input, ListView, ListItem, Label
 from textual.message import Message
 from textual import events
+
+from mlconjug3.tui.search.fuzzy import suggest
+
+
+class VerbListItem(ListItem):
+    """
+    List item carrying a verb payload.
+
+    Attributes
+    ----------
+    verb:
+        Verb represented by this list item.
+    """
+
+    def __init__(self, verb: str) -> None:
+        super().__init__(Label(verb))
+        self.verb: str = verb
 
 
 class VerbSelected(Message):
@@ -116,11 +133,7 @@ class VerbBrowser(Vertical):
         self.list_view.clear()
 
         for verb in verbs[: self.max_results]:
-            item = ListItem(Label(verb))
-
-            # attach metadata safely
-            item.verb = verb  # dynamic attribute for selection
-            self.list_view.append(item)
+            self.list_view.append(VerbListItem(verb))
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """
@@ -137,9 +150,7 @@ class VerbBrowser(Vertical):
         if not query:
             filtered = self.verbs[: self.max_results]
         else:
-            filtered = [
-                v for v in self.verbs if query in v
-            ][: self.max_results]
+            filtered = suggest(self.verbs, query, limit=self.max_results)
 
         self._update_list(filtered)
 
@@ -154,11 +165,9 @@ class VerbBrowser(Vertical):
         """
 
         item = event.item
-
-        verb: Optional[str] = getattr(item, "verb", None)
-
-        if verb is None:
-            label = item.query_one(Label)
-            verb = getattr(label, "renderable", str(label))
-
-        self.post_message(VerbSelected(verb))
+        verb = getattr(item, "verb", None)
+        if isinstance(verb, str):
+            self.post_message(VerbSelected(verb))
+            return
+        label = item.query_one(Label)
+        self.post_message(VerbSelected(str(getattr(label, "renderable", str(label)))))

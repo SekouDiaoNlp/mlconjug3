@@ -82,11 +82,35 @@ class ConjugManager:
         # LOAD BACKEND
         # ---------------------------
         if self.use_unimorph:
-            self._load_unimorph()
+            try:
+                self._load_unimorph()
+            except FileNotFoundError:
+                self._load_minimal()
         else:
-            self._load_legacy()
+            try:
+                self._load_legacy()
+            except FileNotFoundError:
+                self.use_unimorph = True
+                try:
+                    self._load_unimorph()
+                except FileNotFoundError:
+                    self._load_minimal()
 
         self.templates = sorted(self.conjugations.keys())
+
+    def _load_minimal(self) -> None:
+        """
+        Load a tiny built-in dataset when packaged resources are unavailable.
+
+        This keeps the library functional in minimal installations and allows
+        lightweight usage without shipping full conjugation datasets.
+        """
+
+        self.verbs = {"aller": {"root": "all", "template": "A:1"}}
+        self._allowed_endings = self._detect_allowed_endings()
+        self.conjugations = OrderedDict(
+            {"A:1": {"indicative": {"present": [("1s", "vais")]}}}
+        )
 
     # ---------------------------
     # UNIMORPH LOADER

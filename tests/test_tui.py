@@ -27,6 +27,13 @@ import pytest
 from mlconjug3.tui.app import Mlconjug3TUI
 from mlconjug3.tui.widgets.results_table import ResultsTable
 from mlconjug3.tui.widgets.verb_browser import VerbBrowser
+from mlconjug3.tui.state import TUIState
+from mlconjug3.tui.search.fuzzy import suggest
+from mlconjug3.core.export import ExportPayload, to_json, to_text
+from mlconjug3.tui.app import main as tui_main
+from mlconjug3.tui.learn.engine import build_quiz
+from mlconjug3.tui.widgets.suggest_dropdown import SuggestDropdown, SuggestionChosen
+from mlconjug3.core.morphology.summary import summarize, guess_conjugation_class
 
 
 # =========================================================
@@ -90,6 +97,45 @@ def test_results_table_safe_rendering_none():
     )
 
     assert table._tree is not None
+
+
+def test_results_table_filters_mood_and_tense():
+    """
+    Ensure ResultsTable respects mood/tense filters.
+
+    Returns
+    -------
+    None
+    """
+
+    table = ResultsTable()
+    table.update_conjugation(
+        "aller",
+        {
+            "indicatif": {"present": {"je": "vais"}, "imparfait": {"je": "allais"}},
+            "subjonctif": {"present": {"je": "aille"}},
+        },
+        allowed_moods={"indicatif"},
+        allowed_tenses={"present"},
+    )
+
+    root_children = list(table._tree.root.children)
+    assert len(root_children) == 1
+    assert "Indicatif" in str(root_children[0].label)
+
+
+def test_results_table_irregular_badge_for_ml():
+    """
+    Ensure ML mode adds irregular marker badge.
+
+    Returns
+    -------
+    None
+    """
+
+    table = ResultsTable()
+    table.update_conjugation("aller", {"indicatif": {"present": {"je": "vais"}}}, mode="ML")
+    assert "ML*" in str(table._tree.root.label)
 
 
 # =========================================================
@@ -185,7 +231,7 @@ def test_verb_browser_selection_message():
 # APP INTEGRATION TESTS
 # =========================================================
 
-def test_app_update_verb_valid():
+def test_app_update_verb_valid(tmp_path, monkeypatch):
     """
     Test valid verb update flow in Mlconjug3TUI.
 
@@ -199,32 +245,46 @@ def test_app_update_verb_valid():
     None
     """
 
+    monkeypatch.setenv("MLCONJUG3_TUI_STATE_PATH", str(tmp_path / "tui_state.json"))
     app = Mlconjug3TUI()
 
-    def run():
-        table = app.query_one("#results", ResultsTable)
+    class FakeStatic:
+        def update(self, _text: str) -> None:
+            return
 
-        class FakeResult:
-            """
-            Mock conjugation result returned by cache/service layer.
-            """
+    class FakeVM:
+        """
+        Mock view model returned by the TUI facade.
+        """
 
-            conjug_info = {
-                "indicatif": {
-                    "present": {"je": "vais"}
-                }
-            }
-            predicted = False
-            confidence_score = None
+        verb = "aller"
+        table = {"indicatif": {"present": {"je": "vais"}}}
+        predicted = False
+        confidence_score = None
 
-        app.cache.get = lambda k, f: FakeResult()
+    app._compute_and_apply_single = lambda v: app._apply_single_result(  # type: ignore[assignment]
+        v, FakeVM()
+    )
 
-        app._update_verb("aller")
+    results = ResultsTable()
+    class FakeFilterBar:
+        def set_options(self, _m, _t):
+            return
 
-        assert table._tree.root.label is not None
+    app.query_one = lambda selector, _type: (  # type: ignore[assignment]
+        FakeStatic()
+        if selector == "#input_feedback"
+        else FakeFilterBar()
+        if selector == "#filter_bar"
+        else results
+    )
+
+    app._update_verb("aller")
+
+    assert results._tree.root.label is not None
 
 
-def test_app_update_verb_invalid():
+def test_app_update_verb_invalid(tmp_path, monkeypatch):
     """
     Test handling of invalid verb input in Mlconjug3TUI.
 
@@ -237,29 +297,27 @@ def test_app_update_verb_invalid():
     None
     """
 
+    monkeypatch.setenv("MLCONJUG3_TUI_STATE_PATH", str(tmp_path / "tui_state.json"))
     app = Mlconjug3TUI()
 
-    def run():
-        class FakeResults(ResultsTable):
-            """
-            Mock ResultsTable capturing update calls.
-            """
+    class FakeResults(ResultsTable):
+        """
+        Mock ResultsTable capturing update calls.
+        """
 
-            def update_conjugation(self, *args, **kwargs):
-                self.called = True
+        def update_conjugation(self, *args, **kwargs):
+            self.called = True
 
-        app.query_one = lambda _id, _type: FakeResults()
-
-        app._is_valid = lambda v: False
-
-        app._update_verb("notaverb")
+    app.query_one = lambda _id, _type: FakeResults()
+    app._is_valid = lambda v: False
+    app._update_verb("notaverb")
 
 
 # =========================================================
 # BATCH MODE TESTS
 # =========================================================
 
-def test_app_batch_parsing():
+def test_app_batch_parsing(tmp_path, monkeypatch):
     """
     Test batch input parsing and execution flow.
 
@@ -273,47 +331,53 @@ def test_app_batch_parsing():
     None
     """
 
+    monkeypatch.setenv("MLCONJUG3_TUI_STATE_PATH", str(tmp_path / "tui_state.json"))
     app = Mlconjug3TUI()
 
-    def run():
-        class FakeInput:
-            """
-            Mock input widget for batch verb entry.
-            """
-            value = "aller, manger"
+    class FakeInput:
+        """
+        Mock input widget for batch verb entry.
+        """
 
-        class FakeTable(ResultsTable):
-            """
-            Mock ResultsTable tracking update calls.
-            """
+        value = "aller, manger"
 
-            def update_conjugation(self, *args, **kwargs):
-                self.called = True
+    class FakeTable(ResultsTable):
+        """
+        Mock ResultsTable tracking update calls.
+        """
 
-        app.query_one = lambda selector, _type: (
-            FakeInput() if "batch_input" in selector else FakeTable()
-        )
+        def update_conjugation(self, *args, **kwargs):
+            self.called = True
 
-        class FakeResult:
-            conjug_info = {
-                "indicatif": {
-                    "present": {"je": "vais"}
-                }
-            }
-            predicted = False
-            confidence_score = None
+    app.query_one = lambda selector, _type: (
+        FakeInput() if "batch_input" in selector else FakeTable()
+    )
 
-        app.service.conjugate = lambda v: FakeResult()
-        app._is_valid = lambda v: True
+    app._is_valid = lambda v: True
+    app._compute_and_apply_batch = lambda verbs: app._apply_batch_result(  # type: ignore[assignment]
+        [
+            type(
+                "FakeVM",
+                (),
+                {
+                    "verb": v,
+                    "table": {"indicatif": {"present": {"je": "vais"}}},
+                    "predicted": False,
+                    "confidence_score": None,
+                },
+            )()
+            for v in verbs
+        ]
+    )
 
-        app._run_batch()
+    app._run_batch()
 
 
 # =========================================================
 # SETTINGS TESTS
 # =========================================================
 
-def test_app_language_switch():
+def test_app_language_switch(tmp_path, monkeypatch):
     """
     Test language switching behavior in Mlconjug3TUI.
 
@@ -326,18 +390,193 @@ def test_app_language_switch():
     None
     """
 
+    monkeypatch.setenv("MLCONJUG3_TUI_STATE_PATH", str(tmp_path / "tui_state.json"))
     app = Mlconjug3TUI()
 
-    def run():
-        class Event:
-            """
-            Mock Select.Changed event.
-            """
+    class FakeStatic:
+        def update(self, _text: str) -> None:
+            return
 
-            select = type("S", (), {"id": "lang_select"})
-            value = "es"
+    app.query_one = lambda _sel, _type: FakeStatic()  # type: ignore[assignment]
 
-        app.on_select_changed(Event())
+    class Event:
+        """
+        Mock Select.Changed event.
+        """
 
-        assert app.state.language == "es"
-        assert app.service.language == "es"
+        select = type("S", (), {"id": "lang_select"})
+        value = "es"
+
+    app.on_select_changed(Event())
+
+    assert app.state.language == "es"
+    assert app.service.language == "es"
+
+
+# =========================================================
+# STATE PERSISTENCE TESTS
+# =========================================================
+
+def test_tui_state_persistence_roundtrip(tmp_path):
+    """
+    Verify that TUIState saves and loads history/favorites.
+
+    Returns
+    -------
+    None
+    """
+
+    path = tmp_path / "tui_state.json"
+    state = TUIState(storage_path=path)
+    state.language = "es"
+    state.subject = "pronoun"
+    state.add_history("hablar")
+    state.toggle_favorite("hablar")
+
+    state2 = TUIState(storage_path=path)
+    state2.load()
+
+    assert state2.language == "es"
+    assert state2.subject == "pronoun"
+    assert "hablar" in state2.history
+    assert "hablar" in state2.favorites
+
+    # default filters persist
+    state.selected_moods = {"indicatif"}
+    state.save()
+    state3 = TUIState(storage_path=path)
+    state3.load()
+    assert "indicatif" in state3.selected_moods
+
+
+def test_fuzzy_suggest_ranking():
+    """
+    Ensure fuzzy suggestions prioritize prefix and substring matches.
+
+    Returns
+    -------
+    None
+    """
+
+    candidates = ["aller", "parler", "raller", "ballerine"]
+    out = suggest(candidates, "all", limit=10)
+    assert out[0] == "aller"
+    assert "ballerine" in out
+
+
+def test_export_payload_serialization():
+    """
+    Ensure export helpers produce deterministic outputs.
+
+    Returns
+    -------
+    None
+    """
+
+    payload = ExportPayload(
+        verb="aller",
+        language="fr",
+        subject="abbrev",
+        table={"indicatif": {"present": {"je": "vais"}}},
+    )
+
+    js = to_json(payload)
+    assert '"verb": "aller"' in js
+    assert '"language": "fr"' in js
+
+    txt = to_text(payload)
+    assert "aller [fr]" in txt
+    assert "indicatif" in txt.lower()
+
+
+def test_tui_help(capsys, monkeypatch):
+    """
+    Ensure TUI entrypoint supports --help.
+
+    Returns
+    -------
+    None
+    """
+
+    monkeypatch.setenv("MLCONJUG3_TUI_STATE_PATH", "/tmp/mlconjug3-tui-state.json")
+    monkeypatch.setattr("sys.argv", ["mlconjug3-tui", "--help"])
+    tui_main()
+    out = capsys.readouterr().out
+    assert "mlconjug3-tui" in out
+
+
+def test_learn_quiz_build_deterministic():
+    """
+    Ensure learn quiz selection is deterministic for a seed.
+
+    Returns
+    -------
+    None
+    """
+
+    table = {"indicatif": {"present": {"je": "vais", "tu": "vas"}}}
+    q0 = build_quiz(table, 0)
+    q1 = build_quiz(table, 1)
+    assert q0 is not None and q1 is not None
+    assert q0.person != q1.person
+
+
+def test_suggest_dropdown_emits_message():
+    """
+    Ensure SuggestDropdown emits SuggestionChosen.
+
+    Returns
+    -------
+    None
+    """
+
+    dd = SuggestDropdown()
+    dd.set_suggestions(["aller"])
+
+    class FakeEvent:
+        item = type("I", (), {"value": "aller"})()
+
+    messages = []
+    dd.post_message = lambda msg: messages.append(msg)  # type: ignore[assignment]
+    dd.on_list_view_selected(FakeEvent())
+    assert isinstance(messages[0], SuggestionChosen)
+    assert messages[0].value == "aller"
+
+
+def test_morphology_summary_computed_and_curated():
+    """
+    Ensure morphology summary computes counts and class heuristics.
+
+    Returns
+    -------
+    None
+    """
+
+    s = summarize(
+        language="es",
+        infinitive="hablar",
+        table={"indicatif": {"present": {"yo": "hablo", "tu": None}}},
+        irregular_proxy=True,
+    )
+    assert s.irregular_proxy is True
+    assert s.filled_cells == 1
+    assert s.missing_cells == 1
+    assert s.conjugation_class == "Spanish -ar"
+    assert guess_conjugation_class("it", "parlare") == "Italian -are"
+
+
+def test_app_toggle_favorite_action(tmp_path, monkeypatch):
+    """
+    Ensure the favorite toggle action updates state.
+
+    Returns
+    -------
+    None
+    """
+
+    monkeypatch.setenv("MLCONJUG3_TUI_STATE_PATH", str(tmp_path / "tui_state.json"))
+    app = Mlconjug3TUI()
+    app._current_verb = "aller"
+    app._refresh_status_bar = lambda: None  # type: ignore[assignment]
+    app.action_toggle_favorite()
+    assert "aller" in app.state.favorites
