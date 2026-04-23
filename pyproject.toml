@@ -51,6 +51,7 @@ exclude = [
 [tool.poetry.scripts]
 mlconjug3 = "mlconjug3.cli:main"
 mlconjug3-tui = "mlconjug3.tui.app:main"
+codex = "tools.agent:run"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
