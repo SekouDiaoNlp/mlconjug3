@@ -124,17 +124,28 @@ class ConjugationEngine:
     def _normalise(self, verb: str, language: str, raw) -> ConjugationResult:
         moods: dict = {}
         template = ""
+        confidence = getattr(raw, "confidence_score", None)
+        is_known = not getattr(raw, "predicted", False)
 
         try:
             ci = raw.conjug_info
             template = ci.get("template") or ""
         except Exception:
-            pass
+            try:
+                template = raw.verb_info.template
+            except Exception:
+                pass
 
         try:
-            for mood, tense, _person, form in raw.iterate():
-                moods.setdefault(mood, {}).setdefault(tense, [])
-                moods[mood][tense].append(form if form else "?")
+            for item in raw.iterate():
+                if len(item) == 4:
+                    mood, tense, _person, form = item
+                    moods.setdefault(mood, {}).setdefault(tense, [])
+                    moods[mood][tense].append(form if form else "?")
+                elif len(item) == 3:
+                    mood, tense, form = item
+                    moods.setdefault(mood, {}).setdefault(tense, [])
+                    moods[mood][tense].append(form if form else "?")
         except Exception:
             try:
                 for mood_name, tenses in raw.items():
@@ -150,6 +161,8 @@ class ConjugationEngine:
             language=language,
             template=template,
             moods=moods,
+            confidence=confidence,
+            is_known=is_known,
         )
 
 
@@ -174,11 +187,11 @@ class MorphAnalyzer:
         defective = self._defective(result)
         irr_cells = self._irregular_cells(result, is_suppletive)
 
-        is_irregular = is_suppletive or bool(stem_alts) or bool(irr_cells)
+        is_irregular = is_suppletive or len(stem_alts) > 1 or bool(irr_cells)
 
         irr_type = (
             "suppletive" if is_suppletive else
-            "stem-changing" if stem_alts else
+            "stem-changing" if len(stem_alts) > 1 else
             "defective" if defective else
             "regular"
         )
@@ -312,22 +325,35 @@ class VerbAutocompleteEngine:
         node = self._roots.get(language)
         if not node:
             return []
-        for c in prefix:
+        p = prefix.lower()
+        for c in p:
             node = node.ch.get(c)
             if not node:
                 return []
         out = []
-        self._collect(node, prefix, out, limit)
+        self._collect(node, p, out, limit)
         return out
 
     def _ensure(self, lang):
         if lang in self._loaded:
             return
         root = _Node()
+        # Fallback verbs
         for v in self._FALLBACK.get(lang, []):
             self._insert(root, v)
         self._roots[lang] = root
         self._loaded.add(lang)
+
+    def load_verbs(self, verbs: Iterable[str], language: str) -> None:
+        """
+        Load a list of verbs into the autocomplete trie for a specific language.
+        """
+        if language not in self._roots:
+            self._roots[language] = _Node()
+        root = self._roots[language]
+        for v in verbs:
+            self._insert(root, v.lower())
+        self._loaded.add(language)
 
     def _insert(self, root, word):
         n = root
@@ -340,5 +366,8 @@ class VerbAutocompleteEngine:
             return
         if node.end:
             out.append(pref)
-        for c in node.ch:
+        # Sort keys for deterministic output
+        for c in sorted(node.ch.keys()):
             self._collect(node.ch[c], pref + c, out, limit)
+            if len(out) >= limit:
+                return

@@ -90,6 +90,7 @@ bandit = ">=1.7,<2"
 furo = ">=2024.1,<2026"
 sphinx-rtd-theme = "^3.1.0"
 textual-dev = "^1.8.0"
+pytest-asyncio = "<0.22"
 
 [tool.bandit]
 skips = ["B311"]

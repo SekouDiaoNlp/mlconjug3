@@ -1,5 +1,5 @@
-from textual.widget import Widget
-from textual.widgets import ListView
+from __future__ import annotations
+from textual.widgets import ListView, ListItem, Label
 
 
 class AutocompleteSuggestions(ListView):
@@ -15,6 +15,6 @@ class AutocompleteSuggestions(ListView):
             return
 
         for s in suggestions:
-            self.append(s)
+            self.append(ListItem(Label(s)))
 
         self.add_class("visible")

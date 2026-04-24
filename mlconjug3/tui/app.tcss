@@ -1,7 +1,6 @@
 /* =========================================================
    mlconjug3 TUI — app.tcss
-   btop-inspired dark terminal theme.
-   All colour meanings are reinforced by shape/weight cues.
+   btop-inspired retro-modern terminal theme.
    ========================================================= */
 
 /* ─── Global ──────────────────────────────────────────────── */
@@ -10,33 +9,14 @@ App {
     color: #c9d1d9;
 }
 
-/* ─── High contrast ───────────────────────────────────────── */
-App.-high-contrast {
-    background: #000000;
-    color: #ffffff;
-}
-App.-high-contrast Input {
-    border: tall #ffffff;
-    color: #ffffff;
-    background: #000000;
-}
-App.-high-contrast #lang-badge  { background: #000066; color: #00ffff; }
-App.-high-contrast #mode-badge  { background: #003300; color: #00ff00; }
-
-/* ─── Light theme ─────────────────────────────────────────── */
-App.-theme-light { background: #ffffff; color: #24292f; }
-App.-theme-light #top-bar   { background: #f6f8fa; border-bottom: solid #d0d7de; }
-App.-theme-light #lang-badge { background: #ddf4ff; color: #0969da; }
-App.-theme-light #right-pane { background: #f6f8fa; border-left: solid #d0d7de; }
-App.-theme-light Footer      { background: #f6f8fa; color: #57606a; }
-
 /* ─── Top bar ─────────────────────────────────────────────── */
 #top-bar {
     height: 3;
     background: #161b22;
-    border-bottom: solid #30363d;
+    border-bottom: double #30363d;
     padding: 0 1;
     layout: horizontal;
+    align-vertical: middle;
 }
 
 #verb-input {
@@ -44,9 +24,11 @@ App.-theme-light Footer      { background: #f6f8fa; color: #57606a; }
     background: #0d1117;
     border: tall #30363d;
     color: #58a6ff;
-    padding: 0 1;
 }
-#verb-input:focus { border: tall #58a6ff; }
+#verb-input:focus {
+    border: tall #58a6ff;
+    background: #161b22;
+}
 
 #lang-badge {
     width: 6;
@@ -54,111 +36,145 @@ App.-theme-light Footer      { background: #f6f8fa; color: #57606a; }
     color: #58a6ff;
     content-align: center middle;
     text-style: bold;
+    margin-left: 1;
+}
+
+#mode-badge {
+    width: 12;
+    content-align: center middle;
+    text-style: bold;
+    margin-left: 1;
+}
+
+/* Mode-specific colors */
+.-mode-simple #mode-badge { background: #1f3a2e; color: #3fb950; }
+.-mode-learner #mode-badge { background: #3a2f1f; color: #e3b341; }
+.-mode-research #mode-badge { background: #2d1f3a; color: #bc8cff; }
+
+#bookmark-indicator {
+    width: 3;
+    content-align: center middle;
+    color: #e3b341;
+    margin-left: 1;
+}
+
+/* ─── Main layout ─────────────────────────────────────────── */
+#main {
+    height: 1fr;
+}
+
+#left-pane {
+    width: 2fr;
+    border-right: solid #30363d;
+}
+
+#right-pane {
+    width: 1fr;
+    background: #0d1117;
+}
+
+/* ─── Results Table (Tree) ────────────────────────────────── */
+#results-table {
+    height: 1fr;
+    border: none;
+    background: transparent;
+}
+
+Tree {
+    background: transparent;
+    color: #c9d1d9;
+    padding: 1;
+}
+
+Tree > .tree--guides {
+    color: #30363d;
+}
+
+/* ─── Insights Panel ──────────────────────────────────────── */
+#insights-panel {
+    height: auto;
+    border-bottom: solid #30363d;
+    padding: 1;
+    background: #161b22;
+}
+
+.title {
+    text-style: bold;
+    color: #58a6ff;
+    margin-bottom: 1;
+}
+
+#insights_text {
+    color: #8b949e;
+}
+
+/* ─── Verb Browser ────────────────────────────────────────── */
+#verb-browser {
+    height: 1fr;
+    padding: 1;
+}
+
+#verb-browser Input {
+    border: tall #30363d;
+    margin-bottom: 1;
+}
+
+#verb-browser ListView {
+    background: transparent;
+}
+
+ListItem {
     padding: 0 1;
 }
 
-/* Mode badge colours per active mode */
-#mode-badge { width: 12; content-align: center middle; text-style: bold; padding: 0 1; }
-App.-mode-simple   #mode-badge { background: #1f3a2e; color: #3fb950; }
-App.-mode-learner  #mode-badge { background: #3a2f1f; color: #e3b341; }
-App.-mode-research #mode-badge { background: #2d1f3a; color: #bc8cff; }
+ListItem:hover {
+    background: #161b22;
+    color: #58a6ff;
+}
 
-#bookmark-indicator { width: 3; content-align: center middle; color: #e3b341; }
+ListItem.-highlighted {
+    background: #1f3f6e;
+    color: #ffffff;
+}
 
 /* ─── Autocomplete dropdown ───────────────────────────────── */
 #suggestions {
     layer: overlay;
     background: #161b22;
-    border: solid #58a6ff;
-    max-height: 12;
-    width: 32;
+    border: tall #58a6ff;
+    max-height: 10;
+    width: 40;
     display: none;
-    offset: 0 3;
-}
-#suggestions.visible { display: block; }
-#suggestions > ListItem { padding: 0 1; color: #c9d1d9; }
-#suggestions > ListItem:hover          { background: #1f3f6e; color: #58a6ff; }
-#suggestions > ListItem.-highlighted   { background: #1f3f6e; color: #58a6ff; }
-
-/* ─── Main layout ─────────────────────────────────────────── */
-#main { height: 1fr; layout: horizontal; }
-
-#left-pane {
-    width: 2fr;
-    overflow-y: auto;
+    offset: 2 3;
 }
 
-#right-pane {
-    width: 1fr;
-    border-left: solid #30363d;
-    background: #0d1117;
-    overflow-y: auto;
-    padding: 0 1 1 1;
-}
-#right-pane.hidden { display: none; }
-
-/* ─── Conjugation pane ────────────────────────────────────── */
-#conj-table { padding: 1; }
-
-/* ─── Side panel sections ─────────────────────────────────── */
-LinguisticSidePanel { padding: 0 0 1 0; }
-
-/* ─── Status / Footer ─────────────────────────────────────── */
-Footer { background: #161b22; color: #8b949e; border-top: solid #30363d; }
-Footer > .footer--key { color: #58a6ff; background: #1f3f6e; }
-
-/* ─── Toasts ──────────────────────────────────────────────── */
-Toast { background: #161b22; border: solid #58a6ff; color: #c9d1d9; }
-Toast.-information { border: solid #58a6ff; }
-Toast.-warning     { border: solid #e3b341; color: #e3b341; }
-Toast.-error       { border: solid #f85149; color: #f85149; }
-
-/* ─── Help / History modal ────────────────────────────────── */
-#help-screen {
-    background: #0d1117;
-    border: solid #58a6ff;
-    width: 72;
-    height: 36;
-    padding: 1 2;
+#suggestions.visible {
+    display: block;
 }
 
-#history-screen {
-    background: #0d1117;
-    border: solid #30363d;
-    width: 62;
-    height: 32;
-    padding: 1;
+/* ─── Footer ──────────────────────────────────────────────── */
+Footer {
+    background: #161b22;
+    color: #8b949e;
 }
 
-#history-list > ListItem { padding: 0 1; color: #c9d1d9; }
-#history-list > ListItem:hover        { background: #161b22; color: #58a6ff; }
-#history-list > ListItem.-highlighted { background: #161b22; color: #58a6ff; }
-
-/* ─── Compare input modal ─────────────────────────────────── */
-#compare-input-screen {
-    background: #0d1117;
-    border: solid #30363d;
-    width: 52;
-    height: 14;
-    padding: 1 2;
+/* ─── Accessibility ───────────────────────────────────────── */
+.-theme-light {
+    background: #ffffff;
+    color: #24292f;
 }
 
-/* ─── Reduced motion ──────────────────────────────────────── */
-App.-reduced-motion * {
-    transition: none !important;
-    App.-reduced-motion * {
-    transition: none !important;
-}
+.-theme-light #top-bar { background: #f6f8fa; border-bottom: double #d0d7de; }
+.-theme-light #verb-input { background: #ffffff; border: tall #d0d7de; }
+.-theme-light #right-pane { background: #f6f8fa; }
+.-theme-light #insights-panel { background: #f6f8fa; border-bottom: solid #d0d7de; }
+.-theme-light Footer { background: #f6f8fa; color: #57606a; }
+
+/* ─── Animations ──────────────────────────────────────────── */
+* {
+    transition: background 200ms in_out_cubic, color 200ms in_out_cubic, border 200ms in_out_cubic;
 }
 
-/* ─── Colorblind palette cues ─────────────────────────────── */
-App.-colorblind-deuteranopia .badge-irregular { color: #2277ff; }
-App.-colorblind-deuteranopia .badge-regular   { color: #8844ff; }
-App.-colorblind-protanopia   .badge-irregular { color: #1199dd; }
-App.-colorblind-protanopia   .badge-regular   { color: #9944dd; }
-
-/* ─── Scrollbars ──────────────────────────────────────────── */
-ScrollBar               { background: #161b22; color: #30363d; }
-ScrollBar:hover         { color: #58a6ff; }
-ScrollBar > .scrollbar--bar       { background: #30363d; }
-ScrollBar > .scrollbar--bar:hover { background: #58a6ff; }
+.-reduced-motion * {
+    transition: none;
+}
